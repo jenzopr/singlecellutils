@@ -9,5 +9,6 @@ Description: More about what it does (maybe more than one line)
 License: MIT
 LazyData: TRUE
 Imports:
-    zoo
+    zoo,
+    lawstat
 RoxygenNote: 5.0.1
