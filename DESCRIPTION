@@ -10,5 +10,6 @@ License: MIT
 LazyData: TRUE
 Imports:
     zoo,
-    lawstat
+    lawstat,
+    kohonen
 RoxygenNote: 5.0.1
