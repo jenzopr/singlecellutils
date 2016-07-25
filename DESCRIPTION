@@ -11,5 +11,8 @@ LazyData: TRUE
 Imports:
     zoo,
     lawstat,
-    kohonen
+    kohonen,
+    cluster,
+    RColorBrewer,
+    broom
 RoxygenNote: 5.0.1
