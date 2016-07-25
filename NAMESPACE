@@ -3,4 +3,5 @@
 export(calcSOM)
 export(dm)
 export(norm.gini)
+export(vistSNE)
 export(winsorize)
