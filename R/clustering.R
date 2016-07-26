@@ -77,3 +77,24 @@ mapinit <- function(datamat, prefactor = 1, toroidal = FALSE) {
     }
     list(h = h, w = w, initgrid = gridshape)
 }
+
+#' Clusters a SOM into k regions determined by k-means
+#'
+#' @param codes SOM code matrix.
+#' @param k Number of clusters. If NULL, will perform Gap statistics.
+#' @param ... Additional parameters passed to hclust.
+#'
+#' @return A clustering of the SOM.
+#'
+#' @export
+clusterSOM <- function(codes, k = NULL, ...) {
+  if(is.null(k)) {
+    cg <- cluster::clusGap(codes, kmeans, sqrt(nrow(codes)), d.power = 2)
+    k <- maxSE(cg$Tab[,3],cg$Tab[,4],method="firstSEmax",.25)
+  }
+  if(k < 2) {
+    stop("Cannot cluster som codes into less than 2 clusters. Set k to at least 2.")
+  }
+
+  cutree(hclust(dist(codes), ...), k)
+}
