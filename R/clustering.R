@@ -80,7 +80,7 @@ mapinit <- function(datamat, prefactor = 1, toroidal = FALSE) {
 
 #' Clusters a SOM into k regions determined by k-means
 #'
-#' @param codes SOM code matrix.
+#' @param codes The codes matrix from a SOM object.
 #' @param k Number of clusters. If NULL, will perform Gap statistics.
 #' @param ... Additional parameters passed to hclust.
 #'
@@ -89,12 +89,41 @@ mapinit <- function(datamat, prefactor = 1, toroidal = FALSE) {
 #' @export
 clusterSOM <- function(codes, k = NULL, ...) {
   if(is.null(k)) {
-    cg <- cluster::clusGap(codes, kmeans, sqrt(nrow(codes)), d.power = 2)
+    cg <- cluster::clusGap(codes, kmeans, floor(sqrt(nrow(codes))), d.power = 2)
     k <- maxSE(cg$Tab[,3],cg$Tab[,4],method="firstSEmax",.25)
   }
   if(k < 2) {
     stop("Cannot cluster som codes into less than 2 clusters. Set k to at least 2.")
   }
-
   cutree(hclust(dist(codes), ...), k)
+}
+
+#' Extracts the rows of the data matrix underlying each SOM node.
+#'
+#' @param som The SOM object.
+#' @param clustering An optional clustering of SOM nodes.
+#'
+#' @return Row indices or data row names for each node or each cluster as a list.
+#'
+#' @export
+getSOMgenes <- function(som, clustering = NULL) {
+  if(!is(som,"kohonen")) {
+    stop("Supplied object som is not of class kohonen.")
+  }
+  if(is.null(clustering)) {
+    clustering <- 1:nrow(som$codes)
+  }
+  k <- max(clustering)
+  l <- lapply(1:k, function(i) {
+    units <- which(clustering == i)
+    ind <- which(som$unit.classif %in% units)
+    if(!is.null(som$data)) {
+      return(rownames(som$data)[ind])
+    }
+    else {
+      return(ind)
+    }
+  })
+  names(l) <- 1:k
+  return(l)
 }

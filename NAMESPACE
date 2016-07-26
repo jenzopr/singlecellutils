@@ -3,6 +3,7 @@
 export(calcSOM)
 export(clusterSOM)
 export(dm)
+export(getSOMgenes)
 export(norm.gini)
 export(vistSNE)
 export(winsorize)

@@ -7,7 +7,7 @@
 clusterSOM(codes, k = NULL, ...)
 }
 \arguments{
-\item{codes}{SOM code matrix.}
+\item{codes}{The codes matrix from a SOM object.}
 
 \item{k}{Number of clusters. If NULL, will perform Gap statistics.}
 
