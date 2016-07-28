@@ -14,5 +14,6 @@ Imports:
     kohonen,
     cluster,
     RColorBrewer,
-    broom
+    broom,
+    ggplot2
 RoxygenNote: 5.0.1

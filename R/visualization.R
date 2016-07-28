@@ -27,3 +27,49 @@ vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T) {
 
   return(invisible(broom::augment(km, tsne)))
 }
+
+#' Creates a sorted bar plot.
+#'
+#' @param data The data matrix or data.frame.
+#' @param marker A numerical index or rowname.
+#' @param decreasing Whether the expression values should be sorted decreasing.
+#' @param cell.names A vector of alternative cell names.
+#' @param cell.groups A factor of cell groups. If specified, cells will be colored accordingly.
+#' @param threshold A lower bound for expression. Values below will be shown as 10^-2.
+#' @param y.unit A character giving the unit of expression.
+#'
+#' @return A ggplot2 figure.
+#'
+#' @export
+visMarkerBar <- function(data, marker, decreasing = TRUE, cell.names = NULL, cell.groups = NULL, threshold = 10^-2, y.unit = NULL) {
+  if(!is.null(cell.names) & ncol(data) == length(cell.names)) {
+    colnames(data) <- cell.names
+  }
+  if(!is.null(y.unit)) {
+    y.label <- paste("(",y.unit,")",sep="")
+  } else {
+    y.label <- ""
+  }
+  if(is.null(cell.groups)) {
+    cell.groups <- rep("none", ncol(data))
+  }
+  e <- data[marker,]
+  if(!is.null(e)) {
+    order <- order(e, decreasing = decreasing)
+    data <- data.frame(cell = factor(colnames(e), levels = colnames(e)[order]),
+                       expr = ifelse(as.numeric(e)<threshold, 10^-2, as.numeric(e)),
+                       group = cell.groups)
+    p <- ggplot2::ggplot(data, aes(x=cell,y=expr, fill=group)) +
+      ggplot2::geom_bar(stat="identity") +
+      ggplot2::scale_fill_brewer(type = "qual", palette = "Paired") +
+      ggplot2::ylab(paste("Expression level",y.label)) +
+      ggplot2::xlab("Individual single-cells sorted by expression") +
+      ggplot2::ggtitle(marker) +
+      ggplot2::theme(axis.text.x  = element_text(angle=90,hjust=0.5,vjust=0.5,size=8), panel.background=element_rect(fill = "#FFFFFF"))
+    return(p)
+  }
+  else {
+    warning(paste("Data did not contain a row",marker))
+    return(NULL)
+  }
+}
