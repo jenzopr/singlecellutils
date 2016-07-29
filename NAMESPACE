@@ -2,6 +2,7 @@
 
 export(calcSOM)
 export(clusterSOM)
+export(colortSNE)
 export(dm)
 export(getSOMgenes)
 export(norm.gini)

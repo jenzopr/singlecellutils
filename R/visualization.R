@@ -28,6 +28,25 @@ vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T) {
   return(invisible(broom::augment(km, tsne)))
 }
 
+#' A function to color a tSNE map based on a vector.
+#'
+#' @param tsne The data matrix from a tSNE dimension reduction call
+#' @param data A numerical vector on which the coloring is based
+#' @param use.pal The RColorBrewer color palette
+#'
+#' @return NULL
+#'
+#' @export
+colortSNE <- function(tsne, data, use.pal = "RdBu") {
+  if(length(data) != nrow(tsne)) {
+    stop("Data is not same length as tsne.")
+  }
+  pal <- colorRampPalette(RColorBrewer::brewer.pal(10,use.pal))
+  color <- rev(pal(100))[as.numeric(cut(data,breaks=100))]
+  plot(tsne[,1],tsne[,2],xlab = "tSNE dimension 1", ylab = "tSNE dimension 2", col = color, pch = 20)
+  return(invisible(NULL))
+}
+
 #' Creates a sorted bar plot.
 #'
 #' @param data The data matrix or data.frame.
