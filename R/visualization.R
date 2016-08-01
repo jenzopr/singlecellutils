@@ -98,3 +98,71 @@ visMarkerBar <- function(data, marker, decreasing = TRUE, cell.names = NULL, cel
     return(NULL)
   }
 }
+
+#' Visualizes SOM components
+#'
+#' @param som The self-organizing map object.
+#' @param code The codes that should be displayed.
+#' @param titles The title for each component.
+#'
+#' @return The matrix of color codes (invisible)
+#'
+#' @export
+visSOM <- function(som, code=NULL, titles=NULL) {
+  if(!is(som,"kohonen")) {
+    stop("Supplied object som is not of class kohonen.")
+  }
+  if(is.null(code)) {
+    code <- 1:ncol(som$codes)
+  }
+  if(!is.null(titles) && length(titles) != length(code)) {
+    warning("Length of titels does not recapitulate length of codes.")
+    titles <- rep(x = titles, length.out = length(codes))
+  }
+  data <- scale(as.matrix(som$codes[,code]))
+  rows <- som$grid$xdim
+  cols <- som$grid$ydim
+
+  par(mar=c(1,1,3,1))
+  palette <- rev(colorRampPalette(RColorBrewer::brewer.pal(9,"Spectral"))(50))
+
+  colors <- apply(data, 2, function(x) {
+    c <- cut(x, breaks=50, labels=FALSE)
+    ifelse(is.na(c),"#FFFFFF",palette[c])
+  })
+
+  if(length(code) > 1) {
+    par(mfrow=c(3,3))
+  }
+  shift <- 0.5
+  for(i in 1:length(code)) {
+    plot(0, 0, type = "n", axes = FALSE, xlim=c(0, cols), ylim=c(0, rows), xlab="", ylab= "", asp=1, main=titles[i])
+    for(row in 1:rows) {
+      for(col in 0:(cols-1))
+        Hexagon(col + shift, row - 1, col = colors[row+rows*col,i])
+      shift <- ifelse(shift, 0, 0.5)
+    }
+  }
+
+  par(mfrow=c(1,1))
+  return(invisible(colors))
+}
+
+#' Creates a polygon
+#'
+#' @param x The polygons x
+#' @param y The polygons y
+#' @param unitcell Scaling
+#' @param col The color of the polygon
+#'
+#' @return A colored polygon
+Hexagon <- function (x, y, unitcell = 1, col = col) {
+  polygon(c(x, x, x + unitcell/2, x + unitcell, x + unitcell,
+            x + unitcell/2), c(y + unitcell * 0.125,
+                               y + unitcell * 0.875,
+                               y + unitcell * 1.125,
+                               y + unitcell * 0.875,
+                               y + unitcell * 0.125,
+                               y - unitcell * 0.125),
+          col = col, border=NA)
+}
