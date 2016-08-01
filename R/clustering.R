@@ -32,7 +32,7 @@ calcSOM <- function(data, sizemultiplier = 1, num_epochs = 200, train = NULL, se
     # Handle output of mapinit
 
     maxr = min(0.5 * init.map$h, init.map$w)
-    test.som <- kohonen::som(data = data.train, grid = somgrid(init.map$w, init.map$h, "hexagonal"), rlen = num_epochs,
+    test.som <- kohonen::som(data = data.train, grid = kohonen::somgrid(init.map$w, init.map$h, "hexagonal"), rlen = num_epochs,
         radius = c(maxr, 1), init = init.map$initgrid, toroidal = intoroidal)
 
     par(mfrow = c(2, 2))
@@ -90,7 +90,7 @@ mapinit <- function(datamat, prefactor = 1, toroidal = FALSE) {
 clusterSOM <- function(codes, k = NULL, ...) {
   if(is.null(k)) {
     cg <- cluster::clusGap(codes, kmeans, floor(sqrt(nrow(codes))), d.power = 2)
-    k <- maxSE(cg$Tab[,3],cg$Tab[,4],method="firstSEmax",.25)
+    k <- cluster::maxSE(cg$Tab[,3],cg$Tab[,4],method="firstSEmax",.25)
   }
   if(k < 2) {
     stop("Cannot cluster som codes into less than 2 clusters. Set k to at least 2.")
