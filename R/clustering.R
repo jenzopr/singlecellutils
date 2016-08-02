@@ -32,7 +32,7 @@ calcSOM <- function(data, sizemultiplier = 1, num_epochs = 200, train = NULL, se
     # Handle output of mapinit
 
     maxr = min(0.5 * init.map$h, init.map$w)
-    test.som <- kohonen::som(data = data.train, grid = kohonen::somgrid(init.map$w, init.map$h, "hexagonal"), rlen = num_epochs,
+    test.som <- kohonen::som(data = data.train, grid = class::somgrid(init.map$w, init.map$h, "hexagonal"), rlen = num_epochs,
         radius = c(maxr, 1), init = init.map$initgrid, toroidal = intoroidal)
 
     par(mfrow = c(2, 2))
