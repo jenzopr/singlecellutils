@@ -120,8 +120,8 @@ visSOM <- function(som, code=NULL, titles=NULL) {
     titles <- rep(x = titles, length.out = length(codes))
   }
   data <- scale(as.matrix(som$codes[,code]))
-  rows <- som$grid$xdim
-  cols <- som$grid$ydim
+  rows <- som$grid$ydim
+  cols <- som$grid$xdim
 
   par(mar=c(1,1,3,1))
   palette <- rev(colorRampPalette(RColorBrewer::brewer.pal(9,"Spectral"))(50))
@@ -165,4 +165,34 @@ Hexagon <- function (x, y, unitcell = 1, col = col) {
                                y + unitcell * 0.125,
                                y - unitcell * 0.125),
           col = col, border=NA)
+}
+
+#' Creates a violin plot for selected genes
+#'
+#' @param data The expression data (as data.frame)
+#' @param gene.names A character vector of associated gene names (optional)
+#'
+#' @return A ggplot2 figure.
+#'
+#' @export
+visMarkerViolin <- function(data, gene.names = NULL, group = NULL) {
+  if(is.null(gene.names)) {
+    gene.names <- row.names(data)
+  }
+  if(is.null(group)) {
+    group <- rep(1, ncol(data))
+  }
+  data$gene <- factor(gene.names, levels = gene.names[order(gene.names, decreasing = T)])
+  m <- reshape2::melt(data, id.vars=c("gene"))
+  colnames(m) <- c("gene","cell","value")
+  m$group <- gsub(group,"\\1",m$cell)
+
+  p = ggplot2::ggplot(m, ggplot2::aes(gene, value)) +
+    ggplot2::geom_violin(trim=T,scale="width") +
+    ggplot2::geom_jitter(alpha=0.5, ggplot2::aes(color=group), width = 0.75) +
+    ggplot2::coord_flip() +
+    ggplot2::xlab("") +
+    ggplot2::ylab("log2( Transcripts per Million )") #+
+    #ggplot2::scale_colour_manual(values = cols)
+  return(p)
 }
