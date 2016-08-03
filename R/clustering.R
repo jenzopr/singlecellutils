@@ -242,10 +242,10 @@ constructHexNeighborhood <- function(r, q, even.layout = T) {
     dir[dir > n] <- 0
     # Cell is on the right border
     if(i %% q == 0) {
-      dir[dir %% 7 == 1] <- 0
+      dir[dir %% q == 1] <- 0
     }
     else {
-      dir[dir %% 7 == 0] <- 0
+      dir[dir %% q == 0] <- 0
     }
     return(dir[dir!=0])
   })
