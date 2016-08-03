@@ -127,3 +127,66 @@ getSOMgenes <- function(som, clustering = NULL) {
   names(l) <- 1:k
   return(l)
 }
+
+#' Construct the neighborhood of a hexagonal r*q matrix
+#'
+#' @param r The number of rows
+#' @param q The number of columns
+#' @param even.layout Whether the layout is even
+#'
+#' @return A (r*q)*(r*q) binary matrix with neighbors indicated as 1s.
+constructHexNeighborhood <- function(r, q, even.layout = T) {
+  if(!is.logical(even.layout)) {
+    stop("even.layout has to be logical!")
+  }
+  n <- r*q
+  corners <- c(1,q,(n-q+1),n)
+
+  nl <- lapply(1:n, function(i) {
+    row <- ceiling(i/q)-1
+    is.even.row <- ifelse(row %% 2 == 0, T, F)
+
+    e <- i+1
+    w <- i-1
+
+    if(even.layout & is.even.row) {
+      ne <- i+q+1
+      nw <- i+q
+      se <- i-q+1
+      sw <- i-q
+    }
+    if(even.layout & !is.even.row) {
+      ne <- i+q
+      nw <- i+q-1
+      se <- i-q
+      sw <- i-q-1
+    }
+    if(!even.layout & is.even.row) {
+      ne <- i+q
+      nw <- i+q-1
+      se <- i-q
+      sw <- i-q-1
+    }
+    if(!even.layout & !is.even.row) {
+      ne <- i+q+1
+      nw <- i+q
+      se <- i-q+1
+      sw <- i-q
+    }
+    dir <- c(ne,e,se,sw,w,nw)
+    dir[dir < 0] <- 0
+    dir[dir > n] <- 0
+    # Cell is on the right border
+    if(i %% q == 0) {
+      dir[dir %% 7 == 1] <- 0
+    }
+    else {
+      dir[dir %% 7 == 0] <- 0
+    }
+    ret <- rep(0,n)
+    ret[dir] <- 1
+    return(ret)
+  })
+  neighborhood <- do.call("cbind",nl)
+  return(neighborhood)
+}
