@@ -80,22 +80,86 @@ mapinit <- function(datamat, prefactor = 1, toroidal = FALSE) {
 
 #' Clusters a SOM into k regions determined by k-means
 #'
-#' @param codes The codes matrix from a SOM object.
-#' @param k Number of clusters. If NULL, will perform Gap statistics.
-#' @param ... Additional parameters passed to hclust.
+#' @param som The SOM object.
+#' @param kmax The number of clusters. If NULL, will determine k internally.
+#' @param dist.fun Function to calculate neighborhood distances.
+#' @param even.layout Whether the map layout is even (odd otherwise).
+#' @param max.rounds Maximum number of cluster assignments.
+#' @param ... Additional parameters.
 #'
 #' @return A clustering of the SOM.
 #'
 #' @export
-clusterSOM <- function(codes, k = NULL, ...) {
-  if(is.null(k)) {
-    cg <- cluster::clusGap(codes, kmeans, floor(sqrt(nrow(codes))), d.power = 2)
-    k <- cluster::maxSE(cg$Tab[,3],cg$Tab[,4],method="firstSEmax",.25)
+clusterSOM <- function(som, kmax = NULL, dist.fun = median, even.layout = T, max.rounds = max(100,nrow(som$codes)/kmax), ...) {
+  if(!is(som,"kohonen")) {
+    stop("Supplied object som is not of class kohonen.")
   }
-  if(k < 2) {
-    stop("Cannot cluster som codes into less than 2 clusters. Set k to at least 2.")
+  codes <- som$codes
+  # Get neighborhood
+  neighborhood <- constructHexNeighborhood(som$grid$ydim, som$grid$xdim, even.layout = even.layout)
+  # Create neighborhood distances
+  n.distances <- sapply(1:nrow(codes), function(mi) {
+    Ni <- neighborhood[[mi]]
+    distances <- lapply(Ni, function(mj, mi) L2norm(codes[mi,]-codes[mj,]), mi=mi)
+    do.call(dist.fun, list(x=unlist(distances)))
+  })
+  # Find local minima
+  local.minima.set <- sapply(1:nrow(codes), function(mi) {
+    Ni <- c(mi,neighborhood[[mi]])
+    min <- which.min(n.distances[Ni])
+    Ni[min]
+  })
+  # Maximum quorum
+  local.minima.table <- table(local.minima.set)
+  local.minima <- as.numeric(names(local.minima.table)[order(local.minima.table, decreasing = T)])
+  # Removing neighboring local minima in decreasing order
+  kept.minima <- rep(T,length(local.minima))
+  for(i in 1:length(local.minima)) {
+    if(kept.minima[i]) {
+      minima.neighbors <- neighborhood[[local.minima[i]]]
+      kept.minima[which(local.minima %in% minima.neighbors)] <- F
+    }
   }
-  cutree(hclust(dist(codes), ...), k)
+  # Remove non-selfvoters
+  cluster.seeds <- local.minima[kept.minima]
+  selfvoter <- (cluster.seeds == local.minima.set[cluster.seeds])
+  cluster.seeds <- cluster.seeds[selfvoter]
+  # Reduce cluster.seeds further if needed
+  if(!is.null(kmax)) {
+    cluster.seeds <- cluster.seeds[1:kmax]
+  }
+  # Prepare for clustering
+  unassigned <- !(1:nrow(codes) %in% cluster.seeds)
+  clustering <- as.list(cluster.seeds)
+  # Clustering
+  round <- 1
+  while(sum(unassigned) > 0 & round < max.rounds) {
+    cl.border.dists <- sapply(clustering, function(c) {
+      cluster.seed <- c[1]
+      cluster.neighborhood <- unique(unlist(neighborhood[c]))
+      cluster.border <- cluster.neighborhood[which(unassigned[cluster.neighborhood])]
+      if(length(cluster.border) == 0) { return(c(NA,Inf)) }
+      border.dists <- sapply(cluster.border, function(mj,ci) L2norm(codes[ci,]-codes[mj,]), ci=cluster.seed)
+      min <- which.min(border.dists)[1]
+      return(c(cluster.border[min],border.dists[min]))
+    })
+    o <- order(cl.border.dists[2,])
+    for(i in o) {
+      new.member <- cl.border.dists[1,i]
+      if(is.na(new.member)) { next; }
+      if(unassigned[new.member]) {
+        clustering[[i]] <- c(clustering[[i]], new.member)
+        unassigned[new.member] <- F
+      }
+    }
+    round <- round+1
+  }
+  # Prepare for return
+  ret <- rep(NA, nrow(codes))
+  for(i in 1:length(clustering)) {
+    ret[clustering[[i]]] <- i
+  }
+  return(ret)
 }
 
 #' Extracts the rows of the data matrix underlying each SOM node.
@@ -134,7 +198,7 @@ getSOMgenes <- function(som, clustering = NULL) {
 #' @param q The number of columns
 #' @param even.layout Whether the layout is even
 #'
-#' @return A (r*q)*(r*q) binary matrix with neighbors indicated as 1s.
+#' @return A list of length n*q with their neighbors on the grid.
 constructHexNeighborhood <- function(r, q, even.layout = T) {
   if(!is.logical(even.layout)) {
     stop("even.layout has to be logical!")
@@ -183,10 +247,16 @@ constructHexNeighborhood <- function(r, q, even.layout = T) {
     else {
       dir[dir %% 7 == 0] <- 0
     }
-    ret <- rep(0,n)
-    ret[dir] <- 1
-    return(ret)
+    return(dir[dir!=0])
   })
-  neighborhood <- do.call("cbind",nl)
-  return(neighborhood)
+  return(nl)
+}
+
+#' Calculates the L2 norm of a numeric vector
+#'
+#' @param x A numeric vector.
+#'
+#' @return The L2 norm of x.
+L2norm <- function(x) {
+  sqrt(sum(x^2))
 }

@@ -4,14 +4,21 @@
 \alias{clusterSOM}
 \title{Clusters a SOM into k regions determined by k-means}
 \usage{
-clusterSOM(codes, k = NULL, ...)
+clusterSOM(som, kmax = NULL, dist.fun = median, even.layout = T,
+  max.rounds = max(100, nrow(som$codes)/kmax), ...)
 }
 \arguments{
-\item{codes}{The codes matrix from a SOM object.}
+\item{som}{The SOM object.}
 
-\item{k}{Number of clusters. If NULL, will perform Gap statistics.}
+\item{kmax}{The number of clusters. If NULL, will determine k internally.}
 
-\item{...}{Additional parameters passed to hclust.}
+\item{dist.fun}{Function to calculate neighborhood distances.}
+
+\item{even.layout}{Whether the map layout is even (odd otherwise).}
+
+\item{max.rounds}{Maximum number of cluster assignments.}
+
+\item{...}{Additional parameters.}
 }
 \value{
 A clustering of the SOM.
