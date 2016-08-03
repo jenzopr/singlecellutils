@@ -137,9 +137,9 @@ visSOM <- function(som, code=NULL, titles=NULL) {
   shift <- 0.5
   for(i in 1:length(code)) {
     plot(0, 0, type = "n", axes = FALSE, xlim=c(0, cols), ylim=c(0, rows), xlab="", ylab= "", asp=1, main=titles[i])
-    for(row in 1:rows) {
-      for(col in 0:(cols-1))
-        Hexagon(col + shift, row - 1, col = colors[row+rows*col,i])
+    for(row in 0:(rows-1)) {
+      for(col in 1:cols)
+        Hexagon(col + shift, row, col = colors[row*cols+col,i])
       shift <- ifelse(shift, 0, 0.5)
     }
   }
