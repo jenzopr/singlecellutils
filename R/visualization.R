@@ -1,31 +1,36 @@
-#' Visualizes tSNE maps with colored clusters by kmeans.
+#' Visualizes tSNE maps with colored clusters by pam.
 #'
 #' @param tsne The data matrix from a tSNE dimension reduction call
 #' @param k The number of clusters. If NULL, will perform Gap statistics.
 #' @param use.pal The RColorBrewer palette name to use for cluster colors.
 #' @param add.center Whether cluster centers should be added to the plot.
+#' @param medoids length-k vector of integer indices specifying intial medoids.
+#' @param ... Other parameters passed to cluster::pam.
 #'
 #' @return The augmented input data matrix. Clusters are added in .cluster column.
 #'
 #' @export
-vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T) {
+vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T, medoids = NULL, ...) {
+  if(!is.null(medoids)) {
+    k <- length(medoids)
+  }
   if(is.null(k)) {
-    cg <- cluster::clusGap(tsne, kmeans, 10, d.power = 2)
+    cg <- cluster::clusGap(tsne, cluster::pam, 10, d.power = 2)
     k <- cluster::maxSE(cg$Tab[,3],cg$Tab[,4],method="firstSEmax",.25)
   }
   if(k < 2) {
     stop("Cannot cluster tSNE into less than 2 clusters. Set k to at least 2.")
   }
-  km <- kmeans(tsne, centers = k)
+  cl <- cluster::pam(x=tsne, k = k, medoids = medoids, ...)
   pal <- RColorBrewer::brewer.pal(k, use.pal)
 
   plot(tsne[,1],tsne[,2],xlab = "tSNE dimension 1", ylab = "tSNE dimension 2", col = pal[km$cluster], pch = 20)
   if(add.center) {
-    points(km$centers[,1],km$centers[,2], pch = 25, col = pal)
-    text(km$centers[,1]+0.05,km$centers[,2], labels = 1:k)
+    points(cl$medoids[,1],cl$medoids[,2], pch = 25, col = pal)
+    text(cl$medoids[,1]+0.05,cl$medoids[,2], labels = 1:k)
   }
 
-  return(invisible(broom::augment(km, tsne)))
+  return(invisible(broom::augment(cl, tsne)))
 }
 
 #' A function to color a tSNE map based on a vector.
