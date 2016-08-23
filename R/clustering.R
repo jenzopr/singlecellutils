@@ -13,10 +13,10 @@
 #' @export
 calcSOM <- function(data, sizemultiplier = 1, num_epochs = 200, train = NULL, seed = NULL, initrand = FALSE, intoroidal = FALSE) {
     if (num_epochs < length(train)/25) {
-        lower_bound = floor(length(train)/25)
+        lower_bound <- floor(length(train)/25)
         warning(paste(num_epochs, "epochs is low for", length(train), "training genes, it was set to",
             lower_bound))
-        num_epochs = lower_bound
+        num_epochs <- lower_bound
     }
 
     if (!is.null(seed)) {
@@ -24,9 +24,10 @@ calcSOM <- function(data, sizemultiplier = 1, num_epochs = 200, train = NULL, se
     }
 
     if (is.null(train)) {
-        train = 1:min(nrow(datamat), 5000)
+        train <- 1:min(nrow(data), 5000)
     }
-    data.train = data[train, ]
+    data.train <- data[train, ]
+    data.rest <- data[-train, ]
 
     init.map = mapinit(data.train, sizemultiplier, intoroidal)
     # Handle output of mapinit

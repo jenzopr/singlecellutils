@@ -11,7 +11,7 @@
 vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T) {
   if(is.null(k)) {
     cg <- cluster::clusGap(tsne, kmeans, 10, d.power = 2)
-    k <- maxSE(cg$Tab[,3],cg$Tab[,4],method="firstSEmax",.25)
+    k <- cluster::maxSE(cg$Tab[,3],cg$Tab[,4],method="firstSEmax",.25)
   }
   if(k < 2) {
     stop("Cannot cluster tSNE into less than 2 clusters. Set k to at least 2.")
