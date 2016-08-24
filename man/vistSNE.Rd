@@ -2,9 +2,10 @@
 % Please edit documentation in R/visualization.R
 \name{vistSNE}
 \alias{vistSNE}
-\title{Visualizes tSNE maps with colored clusters by kmeans.}
+\title{Visualizes tSNE maps with colored clusters by pam.}
 \usage{
-vistSNE(tsne, k = NULL, use.pal = "Dark2", add.center = T)
+vistSNE(tsne, k = NULL, use.pal = "Dark2", add.center = T,
+  medoids = NULL, ...)
 }
 \arguments{
 \item{tsne}{The data matrix from a tSNE dimension reduction call}
@@ -14,11 +15,15 @@ vistSNE(tsne, k = NULL, use.pal = "Dark2", add.center = T)
 \item{use.pal}{The RColorBrewer palette name to use for cluster colors.}
 
 \item{add.center}{Whether cluster centers should be added to the plot.}
+
+\item{medoids}{length-k vector of integer indices specifying intial medoids.}
+
+\item{...}{Other parameters passed to cluster::pam.}
 }
 \value{
 The augmented input data matrix. Clusters are added in .cluster column.
 }
 \description{
-Visualizes tSNE maps with colored clusters by kmeans.
+Visualizes tSNE maps with colored clusters by pam.
 }
 
