@@ -134,5 +134,5 @@ hvg <- function(data, min.cv2 = .3, mean.quantile = .95, padj.method = "fdr") {
   df <- ncol(data) - 1
   pval <- pchisq(varFitRatio*df,df=df,lower.tail=F)
   adj.pval <- p.adjust(pval,method = padj.method)
-  list(a0 = a0, a1 = a1, order = varorder, pval = adj.pval[varoder])
+  list(a0 = a0, a1 = a1, order = varorder, pval = adj.pval[varoder], df = df)
 }

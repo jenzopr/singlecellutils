@@ -201,3 +201,24 @@ visMarkerViolin <- function(data, gene.names = NULL, group = NULL) {
     #ggplot2::scale_colour_manual(values = cols)
   return(p)
 }
+
+#' Draws a smoothScatter-Plot with hvg fit line and highlighted variable genes.
+#'
+#' @param hvg.fit A list result from the hvg() function.
+#' @param n Number of highly variable genes to highlight.
+#'
+#' @export
+plot.hvg <- function(hvg.fit, n = 500) {
+  means <- log2(rowMeans(data)+1)
+  vars <- apply(data, 1, var)
+  cv2 <- log2(vars/means^2 +1)
+
+  smoothScatter(means,cv2, xlab = "Average normalized read count", ylab = "Squared coefficient of variation")
+  xg <- 2^(seq(min(means), max(means), length.out=1000 ))
+  vfit <- hvg$a1/xg + hvg$a0
+  lines(log2(xg),log2(vfit), col="black", lwd=3)
+  lines(log2(xg),log2(vfit * qchisq(0.975,hvg$df)/hvg$df),lty=2,col="black")
+  lines(log2(xg),log2(vfit * qchisq(0.025,hvg$df)/hvg$df),lty=2,col="black")
+
+  points(means[hvg$varorder[1:n]],cv2[hvg$varorder[1:n]],col=2)
+}
