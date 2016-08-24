@@ -9,13 +9,6 @@
 #'
 #' @export
 dm <- function(data, ...) {
-    cv2.fun = function(x) {
-        x <- x[!is.na(x)]
-        if (mean(x) == 0) {
-            return(0)
-        }
-        log2((sd(x)/mean(x))^2 + 1)
-    }
     ret <- normByWindow(data = data, ..., stat_fun = cv2.fun)
     ret
 }
@@ -53,30 +46,30 @@ normByWindow <- function(data, stat_fun = NULL, func = median, window = 100, nor
     if (is.null(rownames(data))) {
         rownames(data) <- 1:nrow(data)
     }
-    
+
     # Calculate log2 mean of the rows
     m <- log2(rowMeans(data/10) + 1)
     names(m) <- rownames(data)
-    
+
     # Calculate the statistic with the supplied function
     stat <- apply(data, 1, stat_fun)
-    
+
     # Sort the means
     s <- names(sort(m))
-    
+
     # Calculate summary statistic in a window of x genes
-    r <- zoo::rollapply(data = stat, width = window, FUN = func, fill = "extend")
-    r2 <- zoo::rollapply(data = stat, width = window, FUN = sd, fill = "extend")
+    r <- zoo::rollapply(data = stat[s], width = window, FUN = func, fill = "extend")
+    r2 <- zoo::rollapply(data = stat[s], width = window, FUN = sd, fill = "extend")
     names(r) <- s
     names(r2) <- s
-    
+
     if (normalize) {
         # Return standardized distance to the summary statistic
         ret <- (stat - r[names(stat)])/r2[names(stat)]
     } else {
         ret <- stat - r[names(stat)]
     }
-    
+
     ret[is.na(ret)] <- 0
     ret
 }
@@ -104,4 +97,42 @@ winsorize <- function(x, fraction = 0.05, absolute = NULL, two.sided = TRUE) {
     }
     x[x > lim[2]] <- lim[2]
     x
+}
+
+cv2.fun = function(x) {
+  x <- x[!is.na(x)]
+  if (mean(x) == 0) {
+    return(0)
+  }
+  log2(var(x)/mean(x)^2 + 1)
+}
+
+#' Highly variable genes by Brennecke et. al.
+#'
+#' @param data A normalized count table.
+#' @param min.cv2 Minimum coefficient of variation for genes used in fit.
+#' @param mean.quantile The quantile that should be used to define a minimum mean for genes used in fit.
+#' @param padj.method Method used in adjusting p-values.
+#' @param windsorize Whether windsorization should be applied to data
+#'
+#' @return A list with the fit coefficients, the ordered variance and corresponding adjusted p-values.
+#'
+#' @export
+hvg <- function(data, min.cv2 = .3, mean.quantile = .95, padj.method = "fdr") {
+  means <- rowMeans(data)
+  vars <- apply(data, 1, var)
+  cv2 <- vars/means^2
+
+  min.mean <- unname(quantile(means[which(cv2 > min.cv2)], mean.quantile))
+  use <- means >= min.mean
+  fit <- statmod::glmgam.fit(cbind( a0 = 1, a1tilde = 1/means[use] ), cv2[use])
+  a0 <- unname( fit$coefficients["a0"] )
+  a1 <- unname( fit$coefficients["a1tilde"])
+  afit <- a1/means+a0
+  varFitRatio <- vars/(afit*means^2)
+  varorder <- order(varFitRatio,decreasing=T)
+  df <- ncol(data) - 1
+  pval <- pchisq(varFitRatio*df,df=df,lower.tail=F)
+  adj.pval <- p.adjust(pval,method = padj.method)
+  list(a0 = a0, a1 = a1, order = varorder, pval = adj.pval[varoder])
 }

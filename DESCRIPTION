@@ -17,6 +17,7 @@ Imports:
     broom,
     ggplot2,
     reshape2,
-    class
+    class,
+    statmod
 RoxygenNote: 5.0.1
 Suggests: genefilter
