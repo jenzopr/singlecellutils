@@ -139,8 +139,8 @@ visSOM <- function(som, code=NULL, titles=NULL) {
   if(length(code) > 1) {
     par(mfrow=c(3,3))
   }
-  shift <- 0.5
   for(i in 1:length(code)) {
+    shift <- 0.5
     plot(0, 0, type = "n", axes = FALSE, xlim=c(0, cols), ylim=c(0, rows), xlab="", ylab= "", asp=1, main=titles[i])
     for(row in 0:(rows-1)) {
       for(col in 1:cols)
