@@ -4,15 +4,17 @@
 \alias{clusterSOM}
 \title{Clusters a SOM into k regions determined by k-means}
 \usage{
-clusterSOM(som, kmax = NULL, dist.fun = median, even.layout = T,
-  max.rounds = max(100, nrow(som$codes)/kmax), ...)
+clusterSOM(som, kmax = NULL, dist.fun = median, use.codes = NULL,
+  even.layout = T, max.rounds = max(100, nrow(som$codes)), ...)
 }
 \arguments{
 \item{som}{The SOM object.}
 
 \item{kmax}{The number of clusters. If NULL, will determine k internally.}
 
-\item{dist.fun}{Function to calculate neighborhood distances.}
+\item{dist.fun}{Function to aggregate neighborhood distances.}
+
+\item{use.codes}{Perform clustering only on a subset of codes.}
 
 \item{even.layout}{Whether the map layout is even (odd otherwise).}
 
