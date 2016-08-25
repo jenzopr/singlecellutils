@@ -24,7 +24,7 @@ vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T, medoids =
   cl <- cluster::pam(x=tsne, k = k, medoids = medoids, ...)
   pal <- RColorBrewer::brewer.pal(k, use.pal)
 
-  plot(tsne[,1],tsne[,2],xlab = "tSNE dimension 1", ylab = "tSNE dimension 2", col = pal[km$cluster], pch = 20)
+  plot(tsne[,1],tsne[,2],xlab = "tSNE dimension 1", ylab = "tSNE dimension 2", col = pal[cl$clustering], pch = 20)
   if(add.center) {
     points(cl$medoids[,1],cl$medoids[,2], pch = 25, col = pal)
     text(cl$medoids[,1]+0.05,cl$medoids[,2], labels = 1:k)
