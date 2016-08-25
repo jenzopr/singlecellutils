@@ -83,7 +83,8 @@ mapinit <- function(datamat, prefactor = 1, toroidal = FALSE) {
 #'
 #' @param som The SOM object.
 #' @param kmax The number of clusters. If NULL, will determine k internally.
-#' @param dist.fun Function to calculate neighborhood distances.
+#' @param dist.fun Function to aggregate neighborhood distances.
+#' @param use.codes Perform clustering only on a subset of codes.
 #' @param even.layout Whether the map layout is even (odd otherwise).
 #' @param max.rounds Maximum number of cluster assignments.
 #' @param ... Additional parameters.
@@ -91,17 +92,21 @@ mapinit <- function(datamat, prefactor = 1, toroidal = FALSE) {
 #' @return A clustering of the SOM.
 #'
 #' @export
-clusterSOM <- function(som, kmax = NULL, dist.fun = median, even.layout = T, max.rounds = max(100,nrow(som$codes)/kmax), ...) {
+clusterSOM <- function(som, kmax = NULL, dist.fun = median, use.codes = NULL, even.layout = T, max.rounds = max(100,nrow(som$codes)), ...) {
   if(!is(som,"kohonen")) {
     stop("Supplied object som is not of class kohonen.")
   }
-  codes <- som$codes
+  if(is.null(use.codes)) {
+    use.codes <- 1:ncol(som$codes)
+  }
+  codes <- som$codes[,use.codes]
   # Get neighborhood
   neighborhood <- constructHexNeighborhood(som$grid$ydim, som$grid$xdim, even.layout = even.layout)
   # Create neighborhood distances
   n.distances <- sapply(1:nrow(codes), function(mi) {
     Ni <- neighborhood[[mi]]
-    distances <- lapply(Ni, function(mj, mi) L2norm(codes[mi,]-codes[mj,]), mi=mi)
+    #distances <- lapply(Ni, function(mj, mi) L2norm(codes[mi,]-codes[mj,]), mi=mi)
+    distances <- lapply(Ni, function(mj, mi) 1-cor(codes[mi,],codes[mj,]), mi=mi)
     do.call(dist.fun, list(x=unlist(distances)))
   })
   # Find local minima
@@ -127,7 +132,7 @@ clusterSOM <- function(som, kmax = NULL, dist.fun = median, even.layout = T, max
   cluster.seeds <- cluster.seeds[selfvoter]
   # Reduce cluster.seeds further if needed
   if(!is.null(kmax)) {
-    cluster.seeds <- cluster.seeds[1:kmax]
+    cluster.seeds <- cluster.seeds[1:min(kmax,length(cluster.seeds))]
   }
   # Prepare for clustering
   unassigned <- !(1:nrow(codes) %in% cluster.seeds)
@@ -140,18 +145,17 @@ clusterSOM <- function(som, kmax = NULL, dist.fun = median, even.layout = T, max
       cluster.neighborhood <- unique(unlist(neighborhood[c]))
       cluster.border <- cluster.neighborhood[which(unassigned[cluster.neighborhood])]
       if(length(cluster.border) == 0) { return(c(NA,Inf)) }
-      border.dists <- sapply(cluster.border, function(mj,ci) L2norm(codes[ci,]-codes[mj,]), ci=cluster.seed)
+      #border.dists <- sapply(cluster.border, function(mj,ci) L2norm(codes[ci,]-codes[mj,]), ci=cluster.seed)
+      border.dists <- sapply(cluster.border, function(mj,ci) 1-cor(codes[mi,],codes[mj,]), ci=cluster.seed)
       min <- which.min(border.dists)[1]
       return(c(cluster.border[min],border.dists[min]))
     })
-    o <- order(cl.border.dists[2,])
-    for(i in o) {
-      new.member <- cl.border.dists[1,i]
-      if(is.na(new.member)) { next; }
-      if(unassigned[new.member]) {
-        clustering[[i]] <- c(clustering[[i]], new.member)
-        unassigned[new.member] <- F
-      }
+    i <- which.min(cl.border.dists[2,])
+    new.member <- cl.border.dists[1,i]
+    if(is.na(new.member)) { next; }
+    if(unassigned[new.member]) {
+      clustering[[i]] <- c(clustering[[i]], new.member)
+      unassigned[new.member] <- F
     }
     round <- round+1
   }
