@@ -13,6 +13,22 @@ dm <- function(data, ...) {
     ret
 }
 
+#' Calculate the normalized Theil's T statistic
+#'
+#' @param data A numerical matrix or data.frame.
+#' @param window The window size to calculate the summary statistic in.
+#' @param normalize Whether or not to normalize to the standard deviation.
+#' @param func The function to calculate the summary statistic within windows.
+#'
+#' @return A vector with the normalize Theil's T statistic.
+#'
+#' @export
+norm.theil.t <- function(data, ...) {
+  dropout <- apply(data,1,function(x) sum(x==0)/length(x))
+  ret <- normByWindow(data = data, norm_to = dropout, ..., stat_fun = theils.t)
+  ret
+}
+
 #' Calculates the gini index
 #'
 #' @param data A numerical matrix or data.frame
@@ -42,20 +58,19 @@ norm.gini <- function(data, winsorize = FALSE, ...) {
 #' @param normalize Whether or not to normalize to the standard deviation.
 #'
 #' @return A vector with the summarized statistic
-normByWindow <- function(data, stat_fun = NULL, func = median, window = 100, normalize = TRUE) {
+normByWindow <- function(data, stat_fun = NULL, norm_to = log2(rowMeans(data/10) + 1), func = median, window = 100, normalize = TRUE) {
     if (is.null(rownames(data))) {
         rownames(data) <- 1:nrow(data)
     }
 
-    # Calculate log2 mean of the rows
-    m <- log2(rowMeans(data/10) + 1)
-    names(m) <- rownames(data)
+    # Assign names to norm_to
+    names(norm_to) <- rownames(data)
 
     # Calculate the statistic with the supplied function
     stat <- apply(data, 1, stat_fun)
 
     # Sort the means
-    s <- names(sort(m))
+    s <- names(sort(norm_to))
 
     # Calculate summary statistic in a window of x genes
     r <- zoo::rollapply(data = stat[s], width = window, FUN = func, fill = "extend")
@@ -99,12 +114,20 @@ winsorize <- function(x, fraction = 0.05, absolute = NULL, two.sided = TRUE) {
     x
 }
 
-cv2.fun = function(x) {
+cv2.fun <- function(x) {
   x <- x[!is.na(x)]
   if (mean(x) == 0) {
     return(0)
   }
   log2(var(x)/mean(x)^2 + 1)
+}
+
+theils.t <- function(x) {
+  n <- length(x)
+  m <- mean(x) # maybe winsorize
+  te <- x/m * log(x/m)
+  te[is.nan(te)] <- 0
+  1/n*sum(te)
 }
 
 #' Highly variable genes by Brennecke et. al.
