@@ -4,13 +4,15 @@
 \alias{normByWindow}
 \title{A generic function to normalize a statistic by a summary statistic across windows}
 \usage{
-normByWindow(data, stat_fun = NULL, func = median, window = 100,
-  normalize = TRUE)
+normByWindow(data, stat_fun = NULL, norm_to = log2(rowMeans(data/10) + 1),
+  func = median, window = 100, normalize = TRUE)
 }
 \arguments{
 \item{data}{A numerical matrix or data.frame.}
 
 \item{stat_fun}{A function to calculate the statistic.}
+
+\item{norm_to}{A numeric vector to normalize to.}
 
 \item{func}{A function to summarize the statistic within a window.}
 

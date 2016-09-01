@@ -53,6 +53,7 @@ norm.gini <- function(data, winsorize = FALSE, ...) {
 #'
 #' @param data A numerical matrix or data.frame.
 #' @param stat_fun A function to calculate the statistic.
+#' @param norm_to A numeric vector to normalize to.
 #' @param func A function to summarize the statistic within a window.
 #' @param window The window size to calculate the summary statistic in.
 #' @param normalize Whether or not to normalize to the standard deviation.
