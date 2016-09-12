@@ -115,20 +115,38 @@ winsorize <- function(x, fraction = 0.05, absolute = NULL, two.sided = TRUE) {
     x
 }
 
+#' Calculate Theil's T-Statistic for a vector
+#'
+#' @param x A numeric vector
+#' @param winsorize If winsorization should be applied to x
+#' @param treat.zeros How zeros should be treated. One of c("exclude","epsilon")
+#' @param epsilon In case of treat.zeros equals to "epsilon", a small number is added to observations of x equal to zero.
+#' @param ... Parameters passed to winsorize, if applicable.
+#'
+#' @return Theil's T statistic for x
+#'
+#' @export
+theils.t <- function(x, winsorize = FALSE, treat.zeros = "exclude", epsilon = 0, ...) {
+  z <- match.arg(treat.zeros, c("exclude","epsilon"))
+  if(winsorize) {
+    x <- winsorize(x, ...)
+  }
+  x <- switch (z,
+    exclude = x[!(x==0)],
+    epsilon = x+epsilon
+  )
+  m <- mean(x)
+  n <- length(x)
+  te <- x/m * log(x/m)
+  1/n*sum(te, na.rm = T)
+}
+
 cv2.fun <- function(x) {
   x <- x[!is.na(x)]
   if (mean(x) == 0) {
     return(0)
   }
   log2(var(x)/mean(x)^2 + 1)
-}
-
-theils.t <- function(x) {
-  n <- length(x)
-  m <- mean(x) # maybe winsorize
-  te <- x/m * log(x/m)
-  te[is.nan(te)] <- 0
-  1/n*sum(te)
 }
 
 #' Highly variable genes by Brennecke et. al.
