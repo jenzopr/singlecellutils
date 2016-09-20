@@ -18,6 +18,7 @@ Imports:
     ggplot2,
     reshape2,
     class,
-    statmod
+    statmod,
+    VGAM
 RoxygenNote: 5.0.1
 Suggests: genefilter
