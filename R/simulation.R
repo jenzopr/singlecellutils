@@ -14,11 +14,11 @@ simulatescSeq <- function(genes=5500, cells=150, beta.shape1 = 3, beta.shape2 = 
   burst.freq <- 10*rbeta(genes, beta.shape1, beta.shape2)
   expression.scale <- (burst.size*burst.freq)^2
 
-  expr_mat <- sapply(1:n, function(x) {
+  expr_mat <- sapply(1:genes, function(x) {
     mean <- expression.scale[x] * rbeta(1, burst.size[x], 10-burst.freq[x])
-    base <- rpois(N, lambda = mean)
+    base <- rpois(cells, lambda = mean)
     rate <- calc_dropout(burst.size[x],burst.freq[x], location = logis.loc, scale = logis.scale)
-    i <- sample(1:N, size=ceiling(N*rate))
+    i <- sample(1:cells, size=ceiling(cells*rate))
     base[i] = 0
     return(base)
   })
