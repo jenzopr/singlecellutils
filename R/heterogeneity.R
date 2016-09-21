@@ -13,20 +13,45 @@ dm <- function(data, ...) {
     ret
 }
 
-#' Calculate the normalized Theil's T statistic
+#' Calculate the Theil's T statistic for each gene and normalize it to the dropout rate. Also calculates a p-value for the residual deviation from a normal distribution.
 #'
 #' @param data A numerical matrix or data.frame.
-#' @param window The window size to calculate the summary statistic in.
-#' @param normalize Whether or not to normalize to the standard deviation.
-#' @param func The function to calculate the summary statistic within windows.
+#' @param use.qantile The quantile that has to be exceeded for fitting.
+#' @param ... other parameters passed to theils.t
 #'
-#' @return A vector with the normalize Theil's T statistic.
+#' @return A list with the following components:
+#' \itemize{
+#'  \item d The linear models coeffictient,
+#'  \item i The linear models intercept,
+#'  \item theils.t A named vector containing Theils T statistic,
+#'  \item dropin A named vector with 1 - dropout values,
+#'  \item pval The p-value for the residuals deviation from the normal distribution.
+#'  }
 #'
 #' @export
-norm.theil.t <- function(data, ...) {
-  dropout <- apply(data,1,function(x) sum(x==0)/length(x))
-  ret <- normByWindow(data = data, norm_to = dropout, ..., stat_fun = theils.t)
-  ret
+norm.theil.t <- function(data, use.quantile = 0.2, ...) {
+  dropin <- 1 - apply(data,1,function(x) sum(x==0)/length(x))
+  theil <- apply(data, 1, theils.t, ...)
+
+  # Fit model
+  use <- theil > quantile(theil, use.quantile)
+  fit <- lm(log(theil[use]+1)~dropin[use])
+  i <- fit$coefficients[1]
+  d <- fit$coefficients[2]
+
+  theoretical <- exp(i + d*dropin)-1
+  res <- scale(theil - theoretical)
+  pval <- pnorm(res, lower.tail = F)
+
+  # Order by pval and assemble return
+  o <- order(pval)
+  return(list(
+    d = d,
+    i =i,
+    theils.t <- theil[o],
+    dropin <- dropin[o],
+    pval <- pval[o]
+  ))
 }
 
 #' Calculates the gini index
@@ -139,6 +164,37 @@ theils.t <- function(x, winsorize = FALSE, treat.zeros = "exclude", epsilon = 0,
   n <- length(x)
   te <- x/m * log(x/m)
   1/n*sum(te, na.rm = T)
+}
+
+#' @export
+theils.between <- function(x, groups) {
+  P <- length(groups)
+  Y <- sum(x)
+  bgte <- sapply(unique(groups), function(g) {
+    ind <- (groups==g)
+    y <- sum(x[ind])
+    p <- sum(ind)
+    return(y/Y * log((y/Y)/(p/P)))
+  })
+
+  #T <- sum(bgte, na.rm = T)
+  T <- bgte
+  return(T)
+}
+
+#' @export
+theils.within <- function(x, groups) {
+  ug <- unique(groups)
+  Y <- sum(x)
+  Yg <- sapply(ug, function(g) sum(x[groups==g]))
+  wgte <- sapply(1:length(ug), function(gi) {
+    ind <- (groups == ug[gi])
+    sum((x[ind]/Yg[gi]) * log((x[ind]/Yg[gi])/(1/sum(ind))), na.rm = T)
+  })
+
+  #T <- sum(Yg/Y * wgte)
+  T <- Yg/Y * wgte
+  return(T)
 }
 
 cv2.fun <- function(x) {

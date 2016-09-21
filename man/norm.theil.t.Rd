@@ -2,23 +2,28 @@
 % Please edit documentation in R/heterogeneity.R
 \name{norm.theil.t}
 \alias{norm.theil.t}
-\title{Calculate the normalized Theil's T statistic}
+\title{Calculate the Theil's T statistic for each gene and normalize it to the dropout rate. Also calculates a p-value for the residual deviation from a normal distribution.}
 \usage{
-norm.theil.t(data, ...)
+norm.theil.t(data, use.quantile = 0.2, ...)
 }
 \arguments{
 \item{data}{A numerical matrix or data.frame.}
 
-\item{window}{The window size to calculate the summary statistic in.}
+\item{...}{other parameters passed to theils.t}
 
-\item{normalize}{Whether or not to normalize to the standard deviation.}
-
-\item{func}{The function to calculate the summary statistic within windows.}
+\item{use.qantile}{The quantile that has to be exceeded for fitting.}
 }
 \value{
-A vector with the normalize Theil's T statistic.
+A list with the following components:
+\itemize{
+ \item d The linear models coeffictient,
+ \item i The linear models intercept,
+ \item theils.t A named vector containing Theils T statistic,
+ \item dropin A named vector with 1 - dropout values,
+ \item pval The p-value for the residuals deviation from the normal distribution.
+ }
 }
 \description{
-Calculate the normalized Theil's T statistic
+Calculate the Theil's T statistic for each gene and normalize it to the dropout rate. Also calculates a p-value for the residual deviation from a normal distribution.
 }
 
