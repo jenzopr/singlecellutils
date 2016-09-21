@@ -48,9 +48,9 @@ norm.theil.t <- function(data, use.quantile = 0.2, ...) {
   return(list(
     d = d,
     i =i,
-    theils.t <- theil[o],
-    dropin <- dropin[o],
-    pval <- pval[o]
+    theils.t = theil[o],
+    dropin = dropin[o],
+    pval = pval[o]
   ))
 }
 
