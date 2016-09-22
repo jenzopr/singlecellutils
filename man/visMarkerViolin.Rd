@@ -10,6 +10,8 @@ visMarkerViolin(data, gene.names = NULL, group = NULL)
 \item{data}{The expression data (as data.frame)}
 
 \item{gene.names}{A character vector of associated gene names (optional)}
+
+\item{group}{Either a character vector containing a regular expression for groups or a vector with actual groups.}
 }
 \value{
 A ggplot2 figure.
