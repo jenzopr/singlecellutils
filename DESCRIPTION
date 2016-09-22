@@ -19,6 +19,7 @@ Imports:
     reshape2,
     class,
     statmod,
-    VGAM
+    VGAM,
+    quadprog
 RoxygenNote: 5.0.1
 Suggests: genefilter
