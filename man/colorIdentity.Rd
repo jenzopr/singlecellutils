@@ -19,6 +19,8 @@ colorIdentity(identity, data = NULL, data.name = NULL,
 \item{state}{If identity is a list, chooses the given state for ordering}
 
 \item{decreasing}{Logical, whether ordering should be decreasing (the default)}
+
+\item{data.discrete}{Logical indicating whether data is discrete (like groups)}
 }
 \description{
 Plot cells along their fraction of identity to a given state

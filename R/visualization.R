@@ -229,6 +229,7 @@ hvg.plot <- function(data, hvg.fit, n = 500) {
 #' @param identity A vector giving the cells identity value or a list from calcFractionOfIdentity call
 #' @param data A numerical vector according which the cells are colored
 #' @param data.name A name that will be shown as plot.main
+#' @param data.discrete Logical indicating whether data is discrete (like groups)
 #' @param pal The color palette
 #' @param state If identity is a list, chooses the given state for ordering
 #' @param decreasing Logical, whether ordering should be decreasing (the default)
@@ -254,6 +255,9 @@ colorIdentity <- function(identity, data=NULL, data.name=NULL, pal=viridis::viri
   colors = "black"
   if( !is.null(data) ) {
     colors <- pal[findInterval(data, seq(0,1,length.out = length(pal)+1), all.inside = TRUE)][order]
+    if( data.discrete ) {
+      colors <- pal[as.numeric(data)]
+    }
   }
 
   plot(ind, id[order,state], col = colors, ylim = c(0,1), pch=16, bty="n", axes=F, xlab="pseudotime", ylab="fraction of identity", main=data.name)
