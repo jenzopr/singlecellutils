@@ -257,6 +257,6 @@ colorIdentity <- function(identity, data=NULL, data.name=NULL, pal=viridis::viri
   }
 
   plot(ind, id[order,state], col = colors, ylim = c(0,1), pch=16, bty="n", axes=F, xlab="pseudotime", ylab="fraction of identity", main=data.name)
-  Axis(1, labels = F)
-  Axis(2, labels = T)
+  axis(1, labels = F)
+  axis(2, labels = T)
 }
