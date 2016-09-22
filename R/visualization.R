@@ -256,7 +256,7 @@ colorIdentity <- function(identity, data=NULL, data.name=NULL, data.discrete=FAL
   if( !is.null(data) ) {
     colors <- pal[findInterval(data, seq(0,1,length.out = length(pal)+1), all.inside = TRUE)][order]
     if( data.discrete ) {
-      colors <- pal[as.numeric(data)]
+      colors <- pal[as.numeric(data)][order]
     }
   }
 
