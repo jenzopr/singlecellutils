@@ -251,9 +251,12 @@ colorIdentity <- function(identity, data=NULL, data.name=NULL, pal=viridis::viri
   ind <- 1:nrow(id)
   order <- order(id[,state], decreasing = decreasing)
 
-  colors <- pal[findInterval(id[,state], seq(0,1,length.out = length(pal)+1), all.inside = TRUE)]
+  colors = "black"
+  if( !is.null(data) ) {
+    colors <- pal[findInterval(data, seq(0,1,length.out = length(pal)+1), all.inside = TRUE)][order]
+  }
 
-  plot(ind, id[order,state], col = colors[order], ylim = c(0,1), pch=16, bty="n", axes=F, xlab="pseudotime", y="fraction of identity", main=data.name)
+  plot(ind, id[order,state], col = colors, ylim = c(0,1), pch=16, bty="n", axes=F, xlab="pseudotime", ylab="fraction of identity", main=data.name)
   Axis(1, labels = F)
   Axis(2, labels = T)
 }
