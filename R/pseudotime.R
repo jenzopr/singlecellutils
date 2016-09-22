@@ -29,7 +29,7 @@ calcFractionOfIdentity <- function(data, states) {
     C <- cbind(rep(1,num.states),diag(num.states))
     b <- c(1, rep(0,num.states))
     d <- t(Y) %*% X
-    QP <- quadprog::solve.QP(Dmat/sc, d/sc, C, b, meq=1, factorized = FALSE)
+    QP <- quadprog::solve.QP(Dmat/scaling, d/scaling, C, b, meq=1, factorized = FALSE)
     e <- sum(abs(Y-X %*% QP$solution))
     return(matrix(c(QP$solution,e), nrow=1))
   }))
