@@ -223,3 +223,37 @@ hvg.plot <- function(data, hvg.fit, n = 500) {
 
   points(log(means[hvg.fit$order[1:n]]),log(cv2[hvg.fit$order[1:n]]),col=2)
 }
+
+#' Plot cells along their fraction of identity to a given state
+#'
+#' @param identity A vector giving the cells identity value or a list from calcFractionOfIdentity call
+#' @param data A numerical vector according which the cells are colored
+#' @param data.name A name that will be shown as plot.main
+#' @param pal The color palette
+#' @param state If identity is a list, chooses the given state for ordering
+#' @param decreasing Logical, whether ordering should be decreasing (the default)
+#'
+#' @export
+colorIdentity <- function(identity, data=NULL, data.name=NULL, pal=viridis::viridis(99), state=NULL, decreasing = TRUE) {
+  if( typeof(identity) != "double" & typeof(identity) != "list") {
+    stop("Parameter identity should be of type double or list.")
+  }
+  if( typeof(identity) == "double") {
+    identity <- as.matrix(identity)
+    state <- 1
+  } else {
+    if( is.null(state)) {
+      warning("When identity is a list, state cannot be NULL. Taking state 1 instead..")
+      state <- 1
+    }
+    identity <- identity$identity
+  }
+  ind <- 1:nrow(identity)
+  order <- order(identity[,state], decreasing = decreasing)
+
+  colors <- pal[findInterval(identity[,state], seq(0,1,length.out = length(pal)+1), all.inside = TRUE)]
+
+  plot(ind, identity[order,state], col = colors[order], ylim = c(0,1), pch=16, bty="n", axes=F, xlab="pseudotime", y="fraction of identity", main=data.name)
+  Axis(1, labels = F)
+  Axis(2, labels = T)
+}

@@ -20,6 +20,7 @@ Imports:
     class,
     statmod,
     VGAM,
-    quadprog
+    quadprog,
+    viridis
 RoxygenNote: 5.0.1
 Suggests: genefilter
