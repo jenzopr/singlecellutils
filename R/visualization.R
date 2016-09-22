@@ -239,21 +239,21 @@ colorIdentity <- function(identity, data=NULL, data.name=NULL, pal=viridis::viri
     stop("Parameter identity should be of type double or list.")
   }
   if( typeof(identity) == "double") {
-    identity <- as.matrix(identity)
+    id <- as.matrix(identity)
     state <- 1
   } else {
     if( is.null(state)) {
       warning("When identity is a list, state cannot be NULL. Taking state 1 instead..")
       state <- 1
     }
-    identity <- identity$identity
+    id <- identity$identity
   }
-  ind <- 1:nrow(identity)
-  order <- order(identity[,state], decreasing = decreasing)
+  ind <- 1:nrow(id)
+  order <- order(id[,state], decreasing = decreasing)
 
-  colors <- pal[findInterval(identity[,state], seq(0,1,length.out = length(pal)+1), all.inside = TRUE)]
+  colors <- pal[findInterval(id[,state], seq(0,1,length.out = length(pal)+1), all.inside = TRUE)]
 
-  plot(ind, identity[order,state], col = colors[order], ylim = c(0,1), pch=16, bty="n", axes=F, xlab="pseudotime", y="fraction of identity", main=data.name)
+  plot(ind, id[order,state], col = colors[order], ylim = c(0,1), pch=16, bty="n", axes=F, xlab="pseudotime", y="fraction of identity", main=data.name)
   Axis(1, labels = F)
   Axis(2, labels = T)
 }
