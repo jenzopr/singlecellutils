@@ -5,7 +5,8 @@
 \title{Plot cells along their fraction of identity to a given state}
 \usage{
 colorIdentity(identity, data = NULL, data.name = NULL,
-  pal = viridis::viridis(99), state = NULL, decreasing = TRUE)
+  data.discrete = FALSE, pal = viridis::viridis(99), state = NULL,
+  decreasing = TRUE)
 }
 \arguments{
 \item{identity}{A vector giving the cells identity value or a list from calcFractionOfIdentity call}
@@ -14,13 +15,13 @@ colorIdentity(identity, data = NULL, data.name = NULL,
 
 \item{data.name}{A name that will be shown as plot.main}
 
+\item{data.discrete}{Logical indicating whether data is discrete (like groups)}
+
 \item{pal}{The color palette}
 
 \item{state}{If identity is a list, chooses the given state for ordering}
 
 \item{decreasing}{Logical, whether ordering should be decreasing (the default)}
-
-\item{data.discrete}{Logical indicating whether data is discrete (like groups)}
 }
 \description{
 Plot cells along their fraction of identity to a given state

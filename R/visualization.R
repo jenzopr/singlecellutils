@@ -235,7 +235,7 @@ hvg.plot <- function(data, hvg.fit, n = 500) {
 #' @param decreasing Logical, whether ordering should be decreasing (the default)
 #'
 #' @export
-colorIdentity <- function(identity, data=NULL, data.name=NULL, pal=viridis::viridis(99), state=NULL, decreasing = TRUE) {
+colorIdentity <- function(identity, data=NULL, data.name=NULL, data.discrete=FALSE, pal=viridis::viridis(99), state=NULL, decreasing = TRUE) {
   if( typeof(identity) != "double" & typeof(identity) != "list") {
     stop("Parameter identity should be of type double or list.")
   }
