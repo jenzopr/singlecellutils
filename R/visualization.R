@@ -176,7 +176,6 @@ Hexagon <- function (x, y, unitcell = 1, col = col) {
 #'
 #' @param data The expression data (as data.frame)
 #' @param gene.names A character vector of associated gene names (optional)
-#' @param group Either a character vector containing a regular expression for groups or a vector with actual groups.
 #'
 #' @return A ggplot2 figure.
 #'
@@ -185,16 +184,13 @@ visMarkerViolin <- function(data, gene.names = NULL, group = NULL) {
   if(is.null(gene.names)) {
     gene.names <- row.names(data)
   }
+  if(is.null(group)) {
+    group <- rep(1, ncol(data))
+  }
   data$gene <- factor(gene.names, levels = gene.names[order(gene.names, decreasing = T)])
   m <- reshape2::melt(data, id.vars=c("gene"))
   colnames(m) <- c("gene","cell","value")
-  if(!is.null(group)) {
-    if( length(group) != nrow(data) ) {
-      m$group <- gsub(group,"\\1",m$cell)
-    }
-  } else {
-    group <- rep(1, ncol(data))
-  }
+  m$group <- gsub(group,"\\1",m$cell)
 
   p = ggplot2::ggplot(m, ggplot2::aes(gene, value)) +
     ggplot2::geom_violin(trim=T,scale="width") +
