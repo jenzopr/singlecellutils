@@ -30,16 +30,16 @@ dm <- function(data, ...) {
 #'
 #' @export
 norm.theil.t <- function(data, use.quantile = 0.2, ...) {
-  dropin <- 1 - apply(data,1,function(x) sum(x==0)/length(x))
+  dropin <- 1 - apply(data, 1, function(x) sum(x == 0) / length(x))
   theil <- apply(data, 1, theils.t, ...)
 
   # Fit model
   use <- theil > quantile(theil, use.quantile)
-  fit <- lm(log(theil[use]+1)~dropin[use])
+  fit <- lm(log(theil[use] + 1)~dropin[use])
   i <- fit$coefficients[1]
   d <- fit$coefficients[2]
 
-  theoretical <- exp(i + d*dropin)-1
+  theoretical <- exp(i + d * dropin) - 1
   res <- scale(theil - theoretical)
   pval <- pnorm(res, lower.tail = F)
 
@@ -47,7 +47,7 @@ norm.theil.t <- function(data, use.quantile = 0.2, ...) {
   o <- order(pval)
   return(list(
     d = d,
-    i =i,
+    i = i,
     theils.t = theil[o],
     dropin = dropin[o],
     pval = pval[o]
@@ -84,7 +84,7 @@ norm.gini <- function(data, winsorize = FALSE, ...) {
 #' @param normalize Whether or not to normalize to the standard deviation.
 #'
 #' @return A vector with the summarized statistic
-normByWindow <- function(data, stat_fun = NULL, norm_to = log2(rowMeans(data/10) + 1), func = median, window = 100, normalize = TRUE) {
+normByWindow <- function(data, stat_fun = NULL, norm_to = log2(rowMeans(data / 10) + 1), func = median, window = 100, normalize = TRUE) {
     if (is.null(rownames(data))) {
         rownames(data) <- 1:nrow(data)
     }
@@ -106,7 +106,7 @@ normByWindow <- function(data, stat_fun = NULL, norm_to = log2(rowMeans(data/10)
 
     if (normalize) {
         # Return standardized distance to the summary statistic
-        ret <- (stat - r[names(stat)])/r2[names(stat)]
+        ret <- (stat - r[names(stat)]) / r2[names(stat)]
     } else {
         ret <- stat - r[names(stat)]
     }
@@ -127,7 +127,7 @@ normByWindow <- function(data, stat_fun = NULL, norm_to = log2(rowMeans(data/10)
 #' @export
 winsorize <- function(x, fraction = 0.05, absolute = NULL, two.sided = TRUE) {
     if (!is.null(absolute)) {
-        fraction <- absolute/length(x)
+        fraction <- absolute / length(x)
     }
     if (length(fraction) != 1 || fraction < 0 || fraction > 0.5) {
         stop("bad value for 'fraction'")
@@ -152,18 +152,18 @@ winsorize <- function(x, fraction = 0.05, absolute = NULL, two.sided = TRUE) {
 #'
 #' @export
 theils.t <- function(x, winsorize = FALSE, treat.zeros = "exclude", epsilon = 0, ...) {
-  z <- match.arg(treat.zeros, c("exclude","epsilon"))
-  if(winsorize) {
+  z <- match.arg(treat.zeros, c("exclude", "epsilon"))
+  if (winsorize) {
     x <- winsorize(x, ...)
   }
   x <- switch (z,
-    exclude = x[!(x==0)],
-    epsilon = x+epsilon
+    exclude = x[!(x == 0)],
+    epsilon = x + epsilon
   )
   m <- mean(x)
   n <- length(x)
-  te <- x/m * log(x/m)
-  1/n*sum(te, na.rm = T)
+  te <- x / m * log(x / m)
+  1 / n * sum(te, na.rm = T)
 }
 
 #' @export
@@ -171,10 +171,10 @@ theils.between <- function(x, groups) {
   P <- length(groups)
   Y <- sum(x)
   bgte <- sapply(unique(groups), function(g) {
-    ind <- (groups==g)
+    ind <- (groups == g)
     y <- sum(x[ind])
     p <- sum(ind)
-    return(y/Y * log((y/Y)/(p/P)))
+    return(y / Y * log( (y / Y) / (p / P)))
   })
 
   #T <- sum(bgte, na.rm = T)
@@ -186,14 +186,14 @@ theils.between <- function(x, groups) {
 theils.within <- function(x, groups) {
   ug <- unique(groups)
   Y <- sum(x)
-  Yg <- sapply(ug, function(g) sum(x[groups==g]))
+  Yg <- sapply(ug, function(g) sum(x[groups == g]))
   wgte <- sapply(1:length(ug), function(gi) {
     ind <- (groups == ug[gi])
-    sum((x[ind]/Yg[gi]) * log((x[ind]/Yg[gi])/(1/sum(ind))), na.rm = T)
+    sum((x[ind] / Yg[gi]) * log((x[ind] / Yg[gi]) / (1 / sum(ind))), na.rm = T)
   })
 
   #T <- sum(Yg/Y * wgte)
-  T <- Yg/Y * wgte
+  T <- Yg / Y * wgte
   return(T)
 }
 
@@ -202,7 +202,7 @@ cv2.fun <- function(x) {
   if (mean(x) == 0) {
     return(0)
   }
-  log2(var(x)/mean(x)^2 + 1)
+  log2(var(x) / mean(x)^2 + 1)
 }
 
 #' Highly variable genes by Brennecke et. al.
@@ -219,18 +219,18 @@ cv2.fun <- function(x) {
 hvg <- function(data, min.cv2 = .3, mean.quantile = .95, padj.method = "fdr") {
   means <- rowMeans(data)
   vars <- apply(data, 1, var)
-  cv2 <- vars/means^2
+  cv2 <- vars / means^2
 
   min.mean <- unname(quantile(means[which(cv2 > min.cv2)], mean.quantile))
   use <- means >= min.mean
-  fit <- statmod::glmgam.fit(cbind( a0 = 1, a1tilde = 1/means[use] ), cv2[use])
+  fit <- statmod::glmgam.fit(cbind( a0 = 1, a1tilde = 1 / means[use] ), cv2[use])
   a0 <- unname( fit$coefficients["a0"] )
   a1 <- unname( fit$coefficients["a1tilde"])
-  afit <- a1/means+a0
-  varFitRatio <- vars/(afit*means^2)
-  varorder <- order(varFitRatio,decreasing=T)
+  afit <- a1 / means + a0
+  varFitRatio <- vars / (afit * means^2)
+  varorder <- order(varFitRatio, decreasing = T)
   df <- ncol(data) - 1
-  pval <- pchisq(varFitRatio*df,df=df,lower.tail=F)
-  adj.pval <- p.adjust(pval,method = padj.method)
+  pval <- pchisq(varFitRatio * df, df = df, lower.tail = F)
+  adj.pval <- p.adjust(pval, method = padj.method)
   list(a0 = a0, a1 = a1, order = varorder, pval = adj.pval[varorder], df = df)
 }

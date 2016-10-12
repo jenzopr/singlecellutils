@@ -10,7 +10,7 @@
 #'
 #' @export
 calcFractionOfIdentity <- function(data, states) {
-  if(nrow(data) != nrow(states)) {
+  if (nrow(data) != nrow(states)) {
     stop("Input matrices did not contain the same number of genes.")
   }
 
@@ -26,20 +26,20 @@ calcFractionOfIdentity <- function(data, states) {
   # Calculate fraction of identity for each cell
   identity <- t(apply(data, 2, function(x) {
     Y <- as.matrix(x)
-    C <- cbind(rep(1,num.states),diag(num.states))
-    b <- c(1, rep(0,num.states))
+    C <- cbind(rep(1, num.states), diag(num.states))
+    b <- c(1, rep(0, num.states))
     d <- t(Y) %*% X
-    QP <- quadprog::solve.QP(Dmat/scaling, d/scaling, C, b, meq=1, factorized = FALSE)
-    e <- sum(abs(Y-X %*% QP$solution))
-    return(matrix(c(QP$solution,e), nrow=1))
+    QP <- quadprog::solve.QP(Dmat / scaling, d / scaling, C, b, meq = 1, factorized = FALSE)
+    e <- sum(abs(Y - X %*% QP$solution))
+    return(matrix(c(QP$solution, e), nrow = 1))
   }))
 
   # Build up
   rownames(identity) <- colnames(data)
-  colnames(identity) <- c(colnames(states),"error")
+  colnames(identity) <- c(colnames(states), "error")
 
   # Add cell ordering
-  ordering <- apply(identity[,-ncol(identity)], 2, order, decreasing = TRUE)
+  ordering <- apply(identity[, -ncol(identity)], 2, order, decreasing = TRUE)
 
   return(list(
     identity = identity,

@@ -23,4 +23,5 @@ Imports:
     quadprog,
     viridis
 RoxygenNote: 5.0.1
-Suggests: genefilter
+Suggests: genefilter,
+    lintr

@@ -11,23 +11,23 @@
 #'
 #' @export
 vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T, medoids = NULL, ...) {
-  if(!is.null(medoids)) {
+  if (!is.null(medoids)) {
     k <- length(medoids)
   }
-  if(is.null(k)) {
+  if (is.null(k)) {
     cg <- cluster::clusGap(tsne, cluster::pam, 10, d.power = 2)
-    k <- cluster::maxSE(cg$Tab[,3],cg$Tab[,4],method="firstSEmax",.25)
+    k <- cluster::maxSE(cg$Tab[, 3], cg$Tab[, 4], method = "firstSEmax", .25)
   }
-  if(k < 2) {
+  if (k < 2) {
     stop("Cannot cluster tSNE into less than 2 clusters. Set k to at least 2.")
   }
-  cl <- cluster::pam(x=tsne, k = k, medoids = medoids, ...)
+  cl <- cluster::pam(x = tsne, k = k, medoids = medoids, ...)
   pal <- RColorBrewer::brewer.pal(k, use.pal)
 
-  plot(tsne[,1],tsne[,2],xlab = "tSNE dimension 1", ylab = "tSNE dimension 2", col = pal[cl$clustering], pch = 20)
-  if(add.center) {
-    points(cl$medoids[,1],cl$medoids[,2], pch = 25, col = pal)
-    text(cl$medoids[,1]+0.05,cl$medoids[,2], labels = 1:k)
+  plot(tsne[, 1], tsne[, 2], xlab = "tSNE dimension 1", ylab = "tSNE dimension 2", col = pal[cl$clustering], pch = 20)
+  if (add.center) {
+    points(cl$medoids[, 1], cl$medoids[, 2], pch = 25, col = pal)
+    text(cl$medoids[, 1] + 0.05, cl$medoids[, 2], labels = 1:k)
   }
 
   return(invisible(broom::augment(cl, tsne)))
@@ -44,17 +44,17 @@ vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T, medoids =
 #'
 #' @export
 colortSNE <- function(tsne, data, data.name = NULL, use.pal = "RdBu") {
-  if(length(data) != nrow(tsne)) {
+  if (length(data) != nrow(tsne)) {
     stop("Data is not same length as tsne.")
   }
-  if(!is.null(data.name)) {
-    main = data.name
+  if (!is.null(data.name)) {
+    main <- data.name
   } else {
-    main = ""
+    main <- ""
   }
-  pal <- colorRampPalette(RColorBrewer::brewer.pal(10,use.pal))
-  color <- rev(pal(100))[as.numeric(cut(data,breaks=100))]
-  plot(tsne[,1],tsne[,2],xlab = "tSNE dimension 1", ylab = "tSNE dimension 2", main = main, col = color, pch = 20)
+  pal <- colorRampPalette(RColorBrewer::brewer.pal(10, use.pal))
+  color <- rev(pal(100))[as.numeric(cut(data, breaks = 100))]
+  plot(tsne[, 1], tsne[, 2], xlab = "tSNE dimension 1", ylab = "tSNE dimension 2", main = main, col = color, pch = 20)
   return(invisible(NULL))
 }
 
@@ -72,34 +72,34 @@ colortSNE <- function(tsne, data, data.name = NULL, use.pal = "RdBu") {
 #'
 #' @export
 visMarkerBar <- function(data, marker, decreasing = TRUE, cell.names = NULL, cell.groups = NULL, threshold = 10^-2, y.unit = NULL) {
-  if(!is.null(cell.names) & ncol(data) == length(cell.names)) {
+  if (!is.null(cell.names) & ncol(data) == length(cell.names)) {
     colnames(data) <- cell.names
   }
-  if(!is.null(y.unit)) {
-    y.label <- paste("(",y.unit,")",sep="")
+  if (!is.null(y.unit)) {
+    y.label <- paste("(", y.unit, ")", sep = "")
   } else {
     y.label <- ""
   }
-  if(is.null(cell.groups)) {
+  if (is.null(cell.groups)) {
     cell.groups <- rep("none", ncol(data))
   }
-  e <- data[marker,]
-  if(!is.null(e)) {
+  e <- data[marker, ]
+  if (!is.null(e)) {
     order <- order(e, decreasing = decreasing)
     data <- data.frame(cell = factor(colnames(e), levels = colnames(e)[order]),
-                       expr = ifelse(as.numeric(e)<threshold, 10^-2, as.numeric(e)),
+                       expr = ifelse(as.numeric(e) < threshold, 10^ - 2, as.numeric(e)),
                        group = cell.groups)
-    p <- ggplot2::ggplot(data, aes(x=cell,y=expr, fill=group)) +
-      ggplot2::geom_bar(stat="identity") +
+    p <- ggplot2::ggplot(data, aes(x = cell, y = expr, fill = group)) +
+      ggplot2::geom_bar(stat = "identity") +
       ggplot2::scale_fill_brewer(type = "qual", palette = "Paired") +
-      ggplot2::ylab(paste("Expression level",y.label)) +
+      ggplot2::ylab(paste("Expression level", y.label)) +
       ggplot2::xlab("Individual single-cells sorted by expression") +
       ggplot2::ggtitle(marker) +
-      ggplot2::theme(axis.text.x  = element_text(angle=90,hjust=0.5,vjust=0.5,size=8), panel.background=element_rect(fill = "#FFFFFF"))
+      ggplot2::theme(axis.text.x  = element_text(angle = 90, hjust = 0.5, vjust = 0.5, size = 8), panel.background = element_rect(fill = "#FFFFFF"))
     return(p)
   }
   else {
-    warning(paste("Data did not contain a row",marker))
+    warning(paste("Data did not contain a row", marker))
     return(NULL)
   }
 }
@@ -114,42 +114,42 @@ visMarkerBar <- function(data, marker, decreasing = TRUE, cell.names = NULL, cel
 #'
 #' @export
 visSOM <- function(som, code=NULL, titles=NULL) {
-  if(!is(som,"kohonen")) {
+  if (!is(som, "kohonen")) {
     stop("Supplied object som is not of class kohonen.")
   }
-  if(is.null(code)) {
+  if (is.null(code)) {
     code <- 1:ncol(som$codes)
   }
-  if(!is.null(titles) && length(titles) != length(code)) {
+  if (!is.null(titles) && length(titles) != length(code)) {
     warning("Length of titels does not recapitulate length of codes.")
-    titles <- rep(x = titles, length.out = length(codes))
+    titles <- rep(x = titles, length.out = length(som$codes))
   }
-  data <- scale(as.matrix(som$codes[,code]))
+  data <- scale(as.matrix(som$codes[, code]))
   rows <- som$grid$ydim
   cols <- som$grid$xdim
 
-  par(mar=c(1,1,3,1))
-  palette <- rev(colorRampPalette(RColorBrewer::brewer.pal(9,"Spectral"))(50))
+  par(mar = c(1, 1, 3, 1))
+  palette <- rev(colorRampPalette(RColorBrewer::brewer.pal(9, "Spectral"))(50))
 
   colors <- apply(data, 2, function(x) {
-    c <- cut(x, breaks=50, labels=FALSE)
-    ifelse(is.na(c),"#FFFFFF",palette[c])
+    c <- cut(x, breaks = 50, labels = FALSE)
+    ifelse(is.na(c), "#FFFFFF", palette[c])
   })
 
-  if(length(code) > 1) {
-    par(mfrow=c(3,3))
+  if (length(code) > 1) {
+    par(mfrow = c(3, 3))
   }
-  for(i in 1:length(code)) {
+  for (i in 1:length(code)) {
     shift <- 0.5
-    plot(0, 0, type = "n", axes = FALSE, xlim=c(0, cols), ylim=c(0, rows), xlab="", ylab= "", asp=1, main=titles[i])
-    for(row in 0:(rows-1)) {
-      for(col in 1:cols)
-        Hexagon(col + shift, row, col = colors[row*cols+col,i])
+    plot(0, 0, type = "n", axes = FALSE, xlim = c(0, cols), ylim = c(0, rows), xlab = "", ylab = "", asp = 1, main = titles[i])
+    for (row in 0:(rows - 1)) {
+      for (col in 1:cols)
+        Hexagon(col + shift, row, col = colors[row * cols + col, i])
       shift <- ifelse(shift, 0, 0.5)
     }
   }
 
-  par(mfrow=c(1,1))
+  par(mfrow = c(1, 1))
   return(invisible(colors))
 }
 
@@ -162,14 +162,14 @@ visSOM <- function(som, code=NULL, titles=NULL) {
 #'
 #' @return A colored polygon
 Hexagon <- function (x, y, unitcell = 1, col = col) {
-  polygon(c(x, x, x + unitcell/2, x + unitcell, x + unitcell,
-            x + unitcell/2), c(y + unitcell * 0.125,
+  polygon(c(x, x, x + unitcell / 2, x + unitcell, x + unitcell,
+            x + unitcell / 2), c(y + unitcell * 0.125,
                                y + unitcell * 0.875,
                                y + unitcell * 1.125,
                                y + unitcell * 0.875,
                                y + unitcell * 0.125,
                                y - unitcell * 0.125),
-          col = col, border=NA)
+          col = col, border = NA)
 }
 
 #' Creates a violin plot for selected genes
@@ -181,20 +181,20 @@ Hexagon <- function (x, y, unitcell = 1, col = col) {
 #'
 #' @export
 visMarkerViolin <- function(data, gene.names = NULL, group = NULL) {
-  if(is.null(gene.names)) {
+  if (is.null(gene.names)) {
     gene.names <- row.names(data)
   }
-  if(is.null(group)) {
+  if (is.null(group)) {
     group <- rep(1, ncol(data))
   }
   data$gene <- factor(gene.names, levels = gene.names[order(gene.names, decreasing = T)])
-  m <- reshape2::melt(data, id.vars=c("gene"))
-  colnames(m) <- c("gene","cell","value")
-  m$group <- gsub(group,"\\1",m$cell)
+  m <- reshape2::melt(data, id.vars = c("gene"))
+  colnames(m) <- c("gene", "cell", "value")
+  m$group <- gsub(group, "\\1", m$cell)
 
-  p = ggplot2::ggplot(m, ggplot2::aes(gene, value)) +
-    ggplot2::geom_violin(trim=T,scale="width") +
-    ggplot2::geom_jitter(alpha=0.5, ggplot2::aes(color=group), width = 0.75) +
+  p <- ggplot2::ggplot(m, ggplot2::aes(gene, value)) +
+    ggplot2::geom_violin(trim = T, scale = "width") +
+    ggplot2::geom_jitter(alpha = 0.5, ggplot2::aes(color = group), width = 0.75) +
     ggplot2::coord_flip() +
     ggplot2::xlab("") +
     ggplot2::ylab("log2( Transcripts per Million )") #+
@@ -212,16 +212,16 @@ visMarkerViolin <- function(data, gene.names = NULL, group = NULL) {
 hvg.plot <- function(data, hvg.fit, n = 500) {
   means <- rowMeans(data)
   vars <- apply(data, 1, var)
-  cv2 <- vars/means^2
+  cv2 <- vars / means^2
 
-  smoothScatter(log(means),log(cv2), xlab = "Average normalized read count", ylab = "Squared coefficient of variation")
-  xg <- exp(seq(min(log(means[means>0])), max(log(means)), length.out=1000))
-  vfit <- hvg.fit$a1/xg + hvg.fit$a0
-  lines(log(xg),log(vfit), col="black", lwd=3)
-  lines(log(xg),log(vfit * qchisq(0.975,hvg.fit$df)/hvg.fit$df),lty=2,col="black")
-  lines(log(xg),log(vfit * qchisq(0.025,hvg.fit$df)/hvg.fit$df),lty=2,col="black")
+  smoothScatter(log(means), log(cv2), xlab = "Average normalized read count", ylab = "Squared coefficient of variation")
+  xg <- exp(seq(min(log(means[means > 0])), max(log(means)), length.out = 1000))
+  vfit <- hvg.fit$a1 / xg + hvg.fit$a0
+  lines(log(xg), log(vfit), col = "black", lwd = 3)
+  lines(log(xg), log(vfit * qchisq(0.975, hvg.fit$df) / hvg.fit$df), lty = 2, col = "black")
+  lines(log(xg), log(vfit * qchisq(0.025, hvg.fit$df) / hvg.fit$df), lty = 2, col = "black")
 
-  points(log(means[hvg.fit$order[1:n]]),log(cv2[hvg.fit$order[1:n]]),col=2)
+  points(log(means[hvg.fit$order[1:n]]), log(cv2[hvg.fit$order[1:n]]), col = 2)
 }
 
 #' Plot cells along their fraction of identity to a given state
@@ -236,31 +236,31 @@ hvg.plot <- function(data, hvg.fit, n = 500) {
 #'
 #' @export
 colorIdentity <- function(identity, data=NULL, data.name=NULL, data.discrete=FALSE, pal=viridis::viridis(99), state=NULL, decreasing = TRUE) {
-  if( typeof(identity) != "double" & typeof(identity) != "list") {
+  if (typeof(identity) != "double" & typeof(identity) != "list") {
     stop("Parameter identity should be of type double or list.")
   }
-  if( typeof(identity) == "double") {
+  if ( typeof(identity) == "double") {
     id <- as.matrix(identity)
     state <- 1
   } else {
-    if( is.null(state)) {
+    if ( is.null(state)) {
       warning("When identity is a list, state cannot be NULL. Taking state 1 instead..")
       state <- 1
     }
     id <- identity$identity
   }
   ind <- 1:nrow(id)
-  order <- order(id[,state], decreasing = decreasing)
+  order <- order(id[, state], decreasing = decreasing)
 
-  colors = "black"
-  if( !is.null(data) ) {
-    colors <- pal[findInterval(data, seq(0,1,length.out = length(pal)+1), all.inside = TRUE)][order]
-    if( data.discrete ) {
+  colors <- "black"
+  if ( !is.null(data) ) {
+    colors <- pal[findInterval(data, seq(0, 1, length.out = length(pal) + 1), all.inside = TRUE)][order]
+    if ( data.discrete ) {
       colors <- pal[as.numeric(data)][order]
     }
   }
 
-  plot(ind, id[order,state], col = colors, ylim = c(0,1), pch=16, bty="n", axes=F, xlab="pseudotime", ylab="fraction of identity", main=data.name)
+  plot(ind, id[order, state], col = colors, ylim = c(0, 1), pch = 16, bty = "n", axes = F, xlab = "pseudotime", ylab = "fraction of identity", main = data.name)
   axis(1, labels = F)
   axis(2, labels = T)
 }

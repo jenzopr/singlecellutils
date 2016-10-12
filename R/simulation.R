@@ -10,16 +10,16 @@
 #'
 #' @export
 simulatescSeq <- function(genes=5500, cells=150, beta.shape1 = 3, beta.shape2 = 5, logis.loc = 1.2, logis.scale = 1.5) {
-  burst.size <- 10*rbeta(genes, beta.shape1, beta.shape2)
-  burst.freq <- 10*rbeta(genes, beta.shape1, beta.shape2)
-  expression.scale <- (burst.size*burst.freq)^2
+  burst.size <- 10 * rbeta(genes, beta.shape1, beta.shape2)
+  burst.freq <- 10 * rbeta(genes, beta.shape1, beta.shape2)
+  expression.scale <- (burst.size * burst.freq)^2
 
   expr_mat <- sapply(1:genes, function(x) {
-    mean <- expression.scale[x] * rbeta(1, burst.size[x], 10-burst.freq[x])
+    mean <- expression.scale[x] * rbeta(1, burst.size[x], 10 - burst.freq[x])
     base <- rpois(cells, lambda = mean)
-    rate <- calc_dropout(burst.size[x],burst.freq[x], location = logis.loc, scale = logis.scale)
-    i <- sample(1:cells, size=ceiling(cells*rate))
-    base[i] = 0
+    rate <- calc_dropout(burst.size[x], burst.freq[x], location = logis.loc, scale = logis.scale)
+    i <- sample(1:cells, size = ceiling(cells * rate))
+    base[i] <- 0
     return(base)
   })
 
@@ -36,9 +36,5 @@ simulatescSeq <- function(genes=5500, cells=150, beta.shape1 = 3, beta.shape2 = 
 #' @return The gene-specific drop-out rate
 calc_dropout <- function(size, frequency, location = 1.2, scale = 1.5) {
   scale.density <- VGAM::dbilogis(location, location, loc1 = location, loc2 = location, scale1 = scale, scale2 = scale)
-  VGAM::dbilogis(size, frequency, loc1 = location, loc2 = location, scale1 = scale, scale2 = scale)/scale.density
+  VGAM::dbilogis(size, frequency, loc1 = location, loc2 = location, scale1 = scale, scale2 = scale) / scale.density
 }
-
-
-
-
