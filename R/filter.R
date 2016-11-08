@@ -10,6 +10,6 @@ EpOverA <- function(A = 4, na.rm = TRUE) {
   function(x) {
     if (na.rm)
       x <- x[!is.na(x)]
-    log2(sum(x) + 1) > A
+    sum(x) > A
   }
 }
