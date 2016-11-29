@@ -11,7 +11,7 @@
 #' @return A som object.
 #'
 #' @export
-calcSOM <- function(data, sizemultiplier = 1, num_epochs = 200, train = NULL, seed = NULL, initrand = FALSE, intoroidal = FALSE) {
+calcSOM <- function(data, sizemultiplier = 1, num_epochs = 200, train = NULL, seed = NULL, initrand = FALSE, init.map = NULL, intoroidal = FALSE) {
     if (num_epochs < length(train) / 25) {
         lower_bound <- floor(length(train) / 25)
         warning(paste(num_epochs, "epochs is low for", length(train), "training genes, it was set to",
@@ -29,7 +29,9 @@ calcSOM <- function(data, sizemultiplier = 1, num_epochs = 200, train = NULL, se
     data.train <- data[train, ]
     data.rest <- data[-train, ]
 
-    init.map <- mapinit(data.train, sizemultiplier, intoroidal)
+    if (is.null(init.map)) {
+      init.map <- mapinit(data.train, sizemultiplier, intoroidal)
+    }
     # Handle output of mapinit
 
     maxr <- min(0.5 * init.map$h, init.map$w)
@@ -77,6 +79,45 @@ mapinit <- function(datamat, prefactor = 1, toroidal = FALSE) {
         }
     }
     list(h = h, w = w, initgrid = gridshape)
+}
+
+#' Initializes a SOM map with two PCA components
+#'
+#' @param datamat A numerical matrix or data.frame.
+#' @param prefactor A factor.
+#' @param toroidal If toroidal.
+#'
+#' @return A list with intialization parameters.
+mapinit2 <- function(datamat, prefactor = 1, toroidal = FALSE) {
+  munits <- 5 * prefactor * sqrt(length(datamat[, 1]))
+  pcar <- prcomp(t(datamat))
+  ev <- pcar$sdev^2
+  if (ev[1] > 5 * ev[2]) {
+    h <- round(sqrt(munits * 5))
+  } else {
+    h <- round(sqrt(munits * ev[1] / ev[2]))
+  }
+  w <- round(munits / h)
+  gridshape <- array(0, dim = c(h * w, length(datamat[1, ])))
+
+  h_pos <- as.numeric(cut(pcar$x[,1], breaks=h))
+  w_pos <- as.numeric(cut(pcar$x[,2], breaks=w))
+  cell_pos <- (h_pos - 1) * w + w_pos
+  n <- constructHexNeighborhood(h, w, even.layout = T)
+
+  h_genes <- rownames(datamat)[order(abs(pcar$rotation[,1]), decreasing = T)[1:100]]
+  w_genes <- rownames(datamat)[order(abs(pcar$rotation[,2]), decreasing = T)[1:100]]
+  genes <- unique(c(h_genes, w_genes))
+
+  for(i in 1:length(datamat[1, ])) {
+    direct <- c(cell_pos[i], n[[cell_pos[i]]])
+    second <- unique(unlist(sapply(direct, function(k) { n[[k]] })))
+    third <- unique(unlist(sapply(second, function(k) { n[[k]] })))
+    gridshape[third,i] <- sum(1/3 * datamat[genes, i])
+    gridshape[second,i] <- gridshape[second,i] + sum(1/2 * datamat[genes, i])
+    gridshape[direct,i] <- gridshape[direct,i] + sum(datamat[genes, i])
+  }
+  list(h = h, w = w, initgrid = scale(gridshape))
 }
 
 #' Clusters a SOM into k regions determined by k-means

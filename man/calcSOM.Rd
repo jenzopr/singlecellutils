@@ -5,7 +5,7 @@
 \title{Calculates a self-organizing map}
 \usage{
 calcSOM(data, sizemultiplier = 1, num_epochs = 200, train = NULL,
-  seed = NULL, initrand = FALSE, intoroidal = FALSE)
+  seed = NULL, initrand = FALSE, init.map = NULL, intoroidal = FALSE)
 }
 \arguments{
 \item{data}{A numerical matrix or data.frame.}
