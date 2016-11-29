@@ -55,6 +55,8 @@ calcSOM <- function(data, sizemultiplier = 1, num_epochs = 200, train = NULL, se
 #' @param toroidal If toroidal.
 #'
 #' @return A list with intialization parameters.
+#'
+#' @export
 mapinit <- function(datamat, prefactor = 1, toroidal = FALSE) {
     munits <- 5 * prefactor * sqrt(length(datamat[, 1]))
     pcar <- prcomp(datamat)
@@ -88,6 +90,8 @@ mapinit <- function(datamat, prefactor = 1, toroidal = FALSE) {
 #' @param toroidal If toroidal.
 #'
 #' @return A list with intialization parameters.
+#'
+#' @export
 mapinit2 <- function(datamat, prefactor = 1, toroidal = FALSE) {
   munits <- 5 * prefactor * sqrt(length(datamat[, 1]))
   pcar <- prcomp(t(datamat))
