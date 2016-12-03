@@ -39,11 +39,12 @@ vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T, medoids =
 #' @param data A numerical vector on which the coloring is based
 #' @param data.name The name of the data, shown in plot.main
 #' @param use.pal The RColorBrewer color palette
+#' @param ... Other parameters passed to plot
 #'
 #' @return NULL
 #'
 #' @export
-colortSNE <- function(tsne, data, data.name = NULL, use.pal = "RdBu") {
+colortSNE <- function(tsne, data, data.name = NULL, use.pal = "RdBu", ...) {
   if (length(data) != nrow(tsne)) {
     stop("Data is not same length as tsne.")
   }
@@ -54,7 +55,7 @@ colortSNE <- function(tsne, data, data.name = NULL, use.pal = "RdBu") {
   }
   pal <- colorRampPalette(RColorBrewer::brewer.pal(10, use.pal))
   color <- rev(pal(100))[as.numeric(cut(data, breaks = 100))]
-  plot(tsne[, 1], tsne[, 2], xlab = "tSNE dimension 1", ylab = "tSNE dimension 2", main = main, col = color, pch = 20)
+  plot(tsne[, 1], tsne[, 2], xlab = "tSNE dimension 1", ylab = "tSNE dimension 2", main = main, col = color, ...)
   return(invisible(NULL))
 }
 

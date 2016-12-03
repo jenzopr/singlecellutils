@@ -4,7 +4,7 @@
 \alias{colortSNE}
 \title{A function to color a tSNE map based on a vector.}
 \usage{
-colortSNE(tsne, data, data.name = NULL, use.pal = "RdBu")
+colortSNE(tsne, data, data.name = NULL, use.pal = "RdBu", ...)
 }
 \arguments{
 \item{tsne}{The data matrix from a tSNE dimension reduction call}
@@ -14,6 +14,8 @@ colortSNE(tsne, data, data.name = NULL, use.pal = "RdBu")
 \item{data.name}{The name of the data, shown in plot.main}
 
 \item{use.pal}{The RColorBrewer color palette}
+
+\item{...}{Other parameters passed to plot}
 }
 \description{
 A function to color a tSNE map based on a vector.
