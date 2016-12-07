@@ -57,7 +57,7 @@ calcFNWeight <- function(data, condition = NULL, means = NULL, expression_cutoff
 
   # Fit a GLM model per cell, capturing the relationship between detection rate and bin mean
   parameters <- t(apply(detectionRate, 2, function(dr) {
-    mod <- glm(dr ~ bin_mu, family = gaussian(link="log"))
+    mod <- glm((dr+.Machine$double.eps) ~ bin_mu, family = gaussian(link="log"))
     coefs <- mod$coefficients
     names(coefs) <- c("Intercept", "Slope")
     coefs
@@ -76,10 +76,15 @@ calcFNWeight <- function(data, condition = NULL, means = NULL, expression_cutoff
 #' @param data Expression data matrix
 #' @param condition A factor describing different conditions
 #'
-calcMeansPerCondition <- function(data, condition) {
+calcMeansPerCondition <- function(data, condition, log = T) {
   condition <- as.factor(condition)
-  sapply(levels(condition), function(c) {
+  m <- sapply(levels(condition), function(c) {
     i <- which(condition == c)
     apply(data[,i], 1, function(g) mean(singlecellutils::winsorize(g)))
   })
+  if (log) {
+    return(log2(m+1))
+  } else {
+    return(m)
+  }
 }
