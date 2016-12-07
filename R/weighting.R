@@ -32,7 +32,7 @@ calcFNWeight <- function(data, condition = NULL, means = NULL, expression_cutoff
   theils.t <- norm.theil.t(data, winsorize = T, treat.zeros = "eps")
   residuals <- scale(theils.t$theils.t - (exp(theils.t$i + theils.t$d * theils.t$dropin) - 1))
   theils.pval <- pnorm(residuals, lower.tail = T)
-  use <- names(theils.t$theils.t[which(pval < 0.10)])
+  use <- names(theils.t$theils.t[which(theils.pval < 0.10)])
 
   # if(!supress.plot) {
   #
