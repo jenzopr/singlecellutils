@@ -2,7 +2,7 @@
 % Please edit documentation in R/weighting.R
 \name{calcFNWeight}
 \alias{calcFNWeight}
-\title{Calculate a weight matrix using false-negative curves}
+\title{Calculates drop-out probabilities based on false-negative curves.}
 \usage{
 calcFNWeight(data, condition = NULL, means = NULL, expression_cutoff = 10,
   supress.plot = T)
@@ -18,7 +18,10 @@ calcFNWeight(data, condition = NULL, means = NULL, expression_cutoff = 10,
 
 \item{supress.plot}{Whether to supress plotting (default TRUE)}
 }
+\value{
+A matrix with drop-out probabilites. The values are only meaningful if the expression of gene g in cell i is below the detection limit.
+}
 \description{
-Calculate a weight matrix using false-negative curves
+Calculates drop-out probabilities based on false-negative curves.
 }
 

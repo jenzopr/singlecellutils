@@ -4,7 +4,7 @@
 \alias{calcMeansPerCondition}
 \title{Calculates means per condition}
 \usage{
-calcMeansPerCondition(data, condition)
+calcMeansPerCondition(data, condition, log = T)
 }
 \arguments{
 \item{data}{Expression data matrix}

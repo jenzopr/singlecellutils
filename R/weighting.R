@@ -1,10 +1,12 @@
-#' Calculate a weight matrix using false-negative curves
+#' Calculates drop-out probabilities based on false-negative curves.
 #'
 #' @param data Expression data matrix
 #' @param condition A factor describing different conditions
 #' @param means A matrix containing mean expression values, e.g. from bulk measurements
 #' @param expression_cutoff A numerical value
 #' @param supress.plot Whether to supress plotting (default TRUE)
+#'
+#' @return A matrix with drop-out probabilites. The values are only meaningful if the expression of gene g in cell i is below the detection limit.
 #'
 #' @export
 calcFNWeight <- function(data, condition = NULL, means = NULL, expression_cutoff = 10, supress.plot = T) {
@@ -68,7 +70,7 @@ calcFNWeight <- function(data, condition = NULL, means = NULL, expression_cutoff
     mu <- means[i, condition]
     1 / (1 + exp(-(parameters[,1] - parameters[,2] * mu)))
   }))
-  return(weights)
+  return(1-weights)
 }
 
 #' Calculates means per condition
