@@ -21,7 +21,8 @@ Imports:
     statmod,
     VGAM,
     quadprog,
-    viridis
+    viridis,
+    lsr
 RoxygenNote: 5.0.1
 Suggests: genefilter,
     lintr
