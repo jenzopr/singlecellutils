@@ -4,14 +4,22 @@
 \alias{visSOM}
 \title{Visualizes SOM components}
 \usage{
-visSOM(som, code = NULL, titles = NULL)
+visSOM(som, codes = NULL, titles = NULL, what = c("code", "population",
+  "aggregate", "overexpression", "underexpression"), aggregate.FUN = mean,
+  scale = T)
 }
 \arguments{
 \item{som}{The self-organizing map object.}
 
-\item{code}{The codes that should be displayed.}
-
 \item{titles}{The title for each component.}
+
+\item{what}{A keyword for what to plot.}
+
+\item{aggregate.FUN}{A function to use for aggregation of codes.}
+
+\item{scale}{If min-max scaling to [-1,1] should be done.}
+
+\item{code}{The codes that should be displayed.}
 }
 \value{
 The matrix of color codes (invisible)

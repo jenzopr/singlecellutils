@@ -110,37 +110,53 @@ visMarkerBar <- function(data, marker, decreasing = TRUE, cell.names = NULL, cel
 #' @param som The self-organizing map object.
 #' @param code The codes that should be displayed.
 #' @param titles The title for each component.
+#' @param what A keyword for what to plot.
+#' @param aggregate.FUN A function to use for aggregation of codes.
+#' @param scale If min-max scaling to [-1,1] should be done.
 #'
 #' @return The matrix of color codes (invisible)
 #'
 #' @export
-visSOM <- function(som, code=NULL, titles=NULL) {
+visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "aggregate", "overexpression", "underexpression"), aggregate.FUN = mean, scale = T) {
   if (!is(som, "kohonen")) {
     stop("Supplied object som is not of class kohonen.")
   }
-  if (is.null(code)) {
-    code <- 1:ncol(som$codes)
+  if (is.null(codes)) {
+    codes <- 1:ncol(som$codes)
   }
-  if (!is.null(titles) && length(titles) != length(code)) {
+  if (!is.null(titles) && !is.null(code) && length(titles) != length(code)) {
     warning("Length of titels does not recapitulate length of codes.")
     titles <- rep(x = titles, length.out = length(som$codes))
   }
-  data <- scale(as.matrix(som$codes[, code]))
+
+  if (scale) {
+    som$codes <- apply(som$codes, 2, function(x) 2 * (x - min(x)) / (max(x) - min(x)) - 1)
+  }
+
+  action <- match.arg(what)
+  data <- switch(action,
+                 code = as.matrix(som$codes[, codes]),
+                 population = as.matrix(table(som$unit.classif)),
+                 aggregate = as.matrix(apply(som$codes[, codes], 1, aggregate.FUN)),
+                 overexpression = as.matrix(apply(apply(som$codes[, codes], 2, function(x) ifelse(x > quantile(x, probs = 0.98), x, NA)), 1, mean, na.rm=T)),
+                 underexpression = as.matrix(apply(apply(som$codes[, codes], 2, function(x) ifelse(x < quantile(x, probs = 0.02), x, NA)), 1, mean, na.rm=T)))
+  num_maps <- ncol(data)
   rows <- som$grid$ydim
   cols <- som$grid$xdim
 
   par(mar = c(1, 1, 3, 1))
-  palette <- rev(colorRampPalette(RColorBrewer::brewer.pal(9, "Spectral"))(50))
+  palette <- rev(colorRampPalette(RColorBrewer::brewer.pal(9, "Spectral"))(99))
 
+  cutpoints <- seq(min(som$codes[, codes], na.rm=T), max(som$codes[, codes], na.rm=T), length.out = 99)
   colors <- apply(data, 2, function(x) {
-    c <- cut(x, breaks = 50, labels = FALSE)
+    c <- cut(x, breaks = cutpoints, labels = FALSE)
     ifelse(is.na(c), "#FFFFFF", palette[c])
   })
 
-  if (length(code) > 1) {
+  if (num_maps > 1) {
     par(mfrow = c(3, 3))
   }
-  for (i in 1:length(code)) {
+  for (i in 1:num_maps) {
     shift <- 0.5
     plot(0, 0, type = "n", axes = FALSE, xlim = c(0, cols), ylim = c(0, rows), xlab = "", ylab = "", asp = 1, main = titles[i])
     for (row in 0:(rows - 1)) {
