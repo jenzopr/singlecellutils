@@ -124,7 +124,7 @@ visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "a
   if (is.null(codes)) {
     codes <- 1:ncol(som$codes)
   }
-  if (!is.null(titles) && !is.null(code) && length(titles) != length(code)) {
+  if (!is.null(titles) && !is.null(codes) && length(titles) != length(codes)) {
     warning("Length of titels does not recapitulate length of codes.")
     titles <- rep(x = titles, length.out = length(som$codes))
   }
