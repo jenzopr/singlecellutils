@@ -112,12 +112,12 @@ visMarkerBar <- function(data, marker, decreasing = TRUE, cell.names = NULL, cel
 #' @param titles The title for each component.
 #' @param what A keyword for what to plot.
 #' @param aggregate.FUN A function to use for aggregation of codes.
-#' @param scale If min-max scaling to [-1,1] should be done.
+#' @param scale Which scaling should be applied.
 #'
 #' @return The matrix of color codes (invisible)
 #'
 #' @export
-visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "aggregate", "overexpression", "underexpression"), aggregate.FUN = mean, scale = T) {
+visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "aggregate", "overexpression", "underexpression"), aggregate.FUN = mean, scale = c("none", "minmax", "zscore")) {
   if (!is(som, "kohonen")) {
     stop("Supplied object som is not of class kohonen.")
   }
@@ -129,9 +129,11 @@ visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "a
     titles <- rep(x = titles, length.out = length(som$codes))
   }
 
-  if (scale) {
-    som$codes <- apply(som$codes, 2, function(x) 2 * (x - min(x)) / (max(x) - min(x)) - 1)
-  }
+  scaling <- match.arg(scale)
+  som$codes <- switch(scaling,
+                      minmax = apply(som$codes, 2, function(x) 2 * (x - min(x)) / (max(x) - min(x)) - 1),
+                      zscore = scale(som$codes),
+                      som$codes)
 
   action <- match.arg(what)
   data <- switch(action,

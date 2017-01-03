@@ -6,7 +6,7 @@
 \usage{
 visSOM(som, codes = NULL, titles = NULL, what = c("code", "population",
   "aggregate", "overexpression", "underexpression"), aggregate.FUN = mean,
-  scale = T)
+  scale = c("none", "minmax", "zscore"))
 }
 \arguments{
 \item{som}{The self-organizing map object.}
@@ -17,7 +17,7 @@ visSOM(som, codes = NULL, titles = NULL, what = c("code", "population",
 
 \item{aggregate.FUN}{A function to use for aggregation of codes.}
 
-\item{scale}{If min-max scaling to [-1,1] should be done.}
+\item{scale}{Which scaling should be applied.}
 
 \item{code}{The codes that should be displayed.}
 }
