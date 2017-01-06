@@ -2,26 +2,26 @@
 % Please edit documentation in R/weighting.R
 \name{calcFNWeight}
 \alias{calcFNWeight}
-\title{Calculates drop-out probabilities based on false-negative curves.}
+\title{Calculates weights/probabilities based on false-negative curves.}
 \usage{
-calcFNWeight(data, condition = NULL, means = NULL, expression_cutoff = 10,
+calcFNWeight(data, means = NULL, nq = 30, expression_cutoff = 10,
   supress.plot = T)
 }
 \arguments{
 \item{data}{Expression data matrix}
 
-\item{condition}{A factor describing different conditions}
+\item{means}{A vector containing mean expression values, e.g. from a bulk measurement}
 
-\item{means}{A matrix containing mean expression values, e.g. from bulk measurements}
+\item{nq}{Number of quantiles used for binning the means}
 
 \item{expression_cutoff}{A numerical value}
 
 \item{supress.plot}{Whether to supress plotting (default TRUE)}
 }
 \value{
-A matrix with drop-out probabilites. The values are only meaningful if the expression of gene g in cell i is below the detection limit.
+A matrix with probabilites that a gene i in cell j is not expressed, given that it it not detected P(not expressed|not detected). The values are only meaningful if the expression of gene i in cell j is below the detection limit.
 }
 \description{
-Calculates drop-out probabilities based on false-negative curves.
+Calculates weights/probabilities based on false-negative curves.
 }
 

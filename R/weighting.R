@@ -1,48 +1,39 @@
-#' Calculates drop-out probabilities based on false-negative curves.
+#' Calculates weights/probabilities based on false-negative curves.
 #'
 #' @param data Expression data matrix
-#' @param condition A factor describing different conditions
-#' @param means A matrix containing mean expression values, e.g. from bulk measurements
+#' @param means A vector containing mean expression values, e.g. from a bulk measurement
+#' @param nq Number of quantiles used for binning the means
 #' @param expression_cutoff A numerical value
 #' @param supress.plot Whether to supress plotting (default TRUE)
 #'
-#' @return A matrix with drop-out probabilites. The values are only meaningful if the expression of gene g in cell i is below the detection limit.
+#' @return A matrix with probabilites that a gene i in cell j is not expressed, given that it it not detected P(not expressed|not detected). The values are only meaningful if the expression of gene i in cell j is below the detection limit.
 #'
 #' @export
-calcFNWeight <- function(data, condition = NULL, means = NULL, expression_cutoff = 10, supress.plot = T) {
+calcFNWeight <- function(data, means = NULL, nq = 30, expression_cutoff = 10, supress.plot = T) {
   if (!is.numeric(data))
     stop("Argument data should be numeric.")
   data <- as.matrix(data)
   n <- nrow(data)
   m <- ncol(data)
 
-  if (is.null(condition)) {
-    condition <- factor(rep("a", m))
-  } else {
-    condition <- as.factor(condition)
-  }
-
   if (is.null(means)) {
-    means <- calcMeansPerCondition(data, condition)
+    nz_data <- data
+    nz_data[nz_data < 1] <- NA
+    means <- rowMeans(log2(nz_data +1), na.rm = T)
   } else {
     means <- as.matrix(means)
-    if (ncol(means) != length(levels(condition)))
-      stop("Mean matrix should have the same number of columns as conditions has levels.")
-    colnames(means) <- levels(condition)
   }
 
+  # Either use all constitutively expressed genes or housekeeping genes here
   theils.t <- norm.theil.t(data, winsorize = T, treat.zeros = "eps")
   residuals <- scale(theils.t$theils.t - (exp(theils.t$i + theils.t$d * theils.t$dropin) - 1))
   theils.pval <- pnorm(residuals, lower.tail = T)
-  use <- names(theils.t$theils.t[which(theils.pval < 0.10)])
-
-  # if(!supress.plot) {
-  #
-  # }
+  use <- names(theils.t$theils.t[which(theils.pval < 0.2)])
 
   # Calculate means that serve for binning the genes
-  mu <- log2(rowMeans(data[use,]) + 1)
-  bins <- split(mu, lsr::quantileCut(mu, 20))
+  # Use bulk means here?
+  mu <- means[use]
+  bins <- split(mu, lsr::quantileCut(mu, nq))
   bin_mu <- sapply(bins, function(s) {
     in_bin <- names(s)
     mean(mu[in_bin])
@@ -55,22 +46,57 @@ calcFNWeight <- function(data, condition = NULL, means = NULL, expression_cutoff
     colSums(e) / nrow(e)
   })
 
-  detectionRate <- do.call("rbind", l_detection_rate)
+  dropoutRate <- 1 - do.call("rbind", l_detection_rate)
 
   # Fit a GLM model per cell, capturing the relationship between detection rate and bin mean
-  parameters <- t(apply(detectionRate, 2, function(dr) {
-    mod <- glm((dr+.Machine$double.eps) ~ bin_mu, family = gaussian(link="log"))
+  parameters <- t(apply(dropoutRate, 2, function(do) {
+    mod <- glm(do ~ bin_mu, family = binomial(link="logit"))
     coefs <- mod$coefficients
     names(coefs) <- c("Intercept", "Slope")
     coefs
   }))
 
-  # Calculate weight per cell and gene, based on the GLMs parameters and the mean expression
-  weights <- t(sapply(1:n, function(i) {
-    mu <- means[i, condition]
-    1 / (1 + exp(-(parameters[,1] - parameters[,2] * mu)))
-  }))
-  return(1-weights)
+  # Calculate P(not detected | expressed)
+  p_nd_e <- t(sapply(means, sigmoid, a = parameters[,1], b = parameters[,2]))
+
+  # Plot
+  if (!supress.plot) {
+    opar <- par()
+    par(mfrow=c(4,4))
+    for(i in 1:m) {
+      plot(bin_mu, dropoutRate[,i], pch=16)
+      lines(bin_mu, sigmoid(bin_mu, a = parameters[i,1], b = parameters[i,2]), type="l", col="red")
+    }
+    par(opar)
+  }
+
+  # Calculare priors P(detection) and P(expression)
+  p_d <- rowSums(data > expression_cutoff)/m
+  p_e <- p_d / rowMeans(1 - p_nd_e)
+
+  # Calculate P(expressed | not detected)
+  p_e_nd <- (p_nd_e * p_e) / (1 - p_d)
+
+  # Calculate P(not expressed | not detected)
+  p_ne_nd <- 1 - p_e_nd
+
+  # Clip to [0,1]
+  p_ne_nd[p_ne_nd < 0] <- 0
+
+  return(p_ne_nd)
+}
+
+#' Returns the value of the sigmoid function
+#' 1 - (1 / (1 + exp(a + (b*x)))
+#'
+#' @param x Parameter x of the function
+#' @param a Parameter a of the function
+#' @param b Parameter b of the function
+#'
+#' @return The evaluated function value.
+#'
+sigmoid <- function(x, a, b) {
+  1-(1 / (1 + exp(a + (x * b))))
 }
 
 #' Calculates means per condition
