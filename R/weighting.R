@@ -64,7 +64,7 @@ calcFNWeight <- function(data, means = NULL, nq = 30, expression_cutoff = 10, su
     opar <- par()
     par(mfrow=c(4,4))
     for(i in 1:m) {
-      plot(bin_mu, dropoutRate[,i], pch=16)
+      plot(bin_mu, dropoutRate[,i], pch=16, xlab="Mean expression in bin", ylab="Dropout rate", main=colnames(data)[i])
       lines(bin_mu, sigmoid(bin_mu, a = parameters[i,1], b = parameters[i,2]), type="l", col="red")
     }
     par(opar)
