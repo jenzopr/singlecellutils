@@ -55,3 +55,52 @@ bayesian_blocks <- function(t, x=NULL, sigma=NULL, fitness="events", kwargs = li
   bins <- rPython::python.method.call("bins","tolist")
   bins
 }
+
+#' Calculates the redundant contribution of x1 and x2 regarding the target variable z
+#'
+#' If we consider S = {X1 , X2 } and a target variable Z, the calculates the amount of information provided by each variable within S about each state of the target Z.
+#'
+#' @param z The target varibale
+#' @param x1 The first source variable
+#' @param x2 The second source variable
+#'
+#' @return The amount of information provided by each variable within S about each state of the target Z
+#'
+#' @export
+redundancy <- function(z, x1, x2) {
+  prob_z <- sapply(z, function(x) sum(z==x)/length(z))
+  min_ispec <- sapply(z, function(x) min(ispec(x1, z, x),ispec(x2, z, x)))
+  sum(prob_z * min_ispec)
+}
+
+#' Calculates the specific information which quantifies the information provided by one variable about a specific state of another variable [89, 90]
+#'
+#' @param x The variable to quantify the information from
+#' @param y The other variable
+#' @param state The specific state of y
+#'
+#' @return The information provided by x about a specific state of y
+ispec <- function(x, y, state) {
+  xy <- condprop(x,y)
+  p_x_state <- xy[as.character(x),state]
+  p_state <- sum(y==state)/length(y)
+
+  yx <- condprop(y,x)
+  p_state_x <- yx[state,as.character(x)]
+  ispec <- p_x_state * (log(1/p_state) - log(1/p_state_x))
+  ispec[!is.finite(ispec)] <- 0
+  sum(ispec)
+}
+
+#' Calculates the conditional propability p(x|given) for two vectors
+#'
+#' @param x The first vector
+#' @param given The second vector
+#'
+#' @return A vector with conditional propabilities.
+condprop <- function(x,given) {
+  t <- as.matrix(table(x,given))
+  xy <- prop.table(t, 2)
+  xy
+  #diag(xy[as.character(x), as.character(given)])
+}
