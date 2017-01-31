@@ -22,7 +22,8 @@ Imports:
     VGAM,
     quadprog,
     viridis,
-    lsr
+    lsr,
+    rPython
 RoxygenNote: 5.0.1
 Suggests: genefilter,
     lintr
