@@ -4,7 +4,8 @@
 \alias{bayesian_blocks}
 \title{Wrapper for astroML.density_estimation.bayesian_blocks}
 \usage{
-bayesian_blocks(t, x = NULL, sigma = NULL, fitness = "events", ...)
+bayesian_blocks(t, x = NULL, sigma = NULL, fitness = "events",
+  kwargs = list())
 }
 \arguments{
 \item{t}{A numeric}
@@ -15,7 +16,7 @@ bayesian_blocks(t, x = NULL, sigma = NULL, fitness = "events", ...)
 
 \item{fitness}{Fitness function}
 
-\item{...}{Other parameters}
+\item{kwargs}{A named list of ot <ther parameters}
 }
 \value{
 array containing the (N+1) bin edges
