@@ -9,13 +9,13 @@
 discretize.bb <- function(X, ...) {
   X <- as.matrix(X)
 
-  l <- apply(X, 2, function(x, ...) {
+  ret <- apply(X, 2, function(x, ...) {
     bins <- bayesian_blocks(x, ...)
     bins[which.min(bins)] <- min(x)
     as.numeric(cut(x, breaks = bins, include.lowest = T))
   }, ...)
 
-  do.call("cbind", l)
+  ret
 }
 
 #' Wrapper for astroML.density_estimation.bayesian_blocks
