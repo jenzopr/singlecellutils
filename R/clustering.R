@@ -42,19 +42,17 @@ calcSOM <- function(data, train = NULL, weights = NULL, num_epochs = 200, resolu
       maxr <- min(0.5 * init$h, init$w)
       test.som <- kohonen::som(data = data.train, grid = class::somgrid(init$w, init$h, "hexagonal"), rlen = num_epochs,
                                radius = c(maxr, 1), init = init$initgrid, toroidal = F)
+      par(mfrow = c(2, 2))
+      plot(test.som, type = "changes", main = "t")
+      plot(test.som, type = "count")
+      plot(test.som, type = "dist.neighbours")
+      plot(test.som, main = "t")
+      par(mfrow = c(1, 1))
     }
     else {
       psom <- Rsomoclu::Rsomoclu.train(data.train, nEpoch = num_epochs, nSomX = init$w, nSomY = init$h, codebook = init$initgrid, radius0 = round(min(init$w, init$h)/2), radiusN = 1, radiusCooling = "linear", scale0 = 1, scaleN = 0.01, scaleCooling = "linear")
       test.som <- Rsomoclu::Rsomoclu.kohonen(data.train, psom, n.hood = "circular")
     }
-
-    par(mfrow = c(2, 2))
-    plot(test.som, type = "changes", main = "t")
-    plot(test.som, type = "count")
-    plot(test.som, type = "dist.neighbours")
-    plot(test.som, main = "t")
-    par(mfrow = c(1, 1))
-
     return(test.som)
 }
 
