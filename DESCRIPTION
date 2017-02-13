@@ -23,7 +23,8 @@ Imports:
     quadprog,
     viridis,
     lsr,
-    rPython
+    rPython,
+    Rsomoclu
 RoxygenNote: 5.0.1
 Suggests: genefilter,
     lintr

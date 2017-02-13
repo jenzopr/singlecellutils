@@ -1,17 +1,21 @@
-#' Calculates a self-organizing map
+#' Calculates a (weighted) self-organizing map
 #'
 #' @param data A numerical matrix or data.frame.
-#' @param sizemultiplier A size multiplier.
-#' @param num_epochs How long the training should last.
 #' @param train Row indices of training data.
+#' @param weights Additonal weights per row
+#' @param num_epochs How long the training should last.
+#' @param resolution A multiplier for the map size
 #' @param seed A random seed (default NULL).
-#' @param initrand Whether initialization should be random (not recommended).
-#' @param intoroidal If a toroidal map should be created.
+#' @param init A list with initialization parameters.
+#' @param parallel Indicates if the parallel implementation should be used.
 #'
 #' @return A som object.
 #'
 #' @export
-calcSOM <- function(data, sizemultiplier = 1, num_epochs = 200, train = NULL, seed = NULL, initrand = FALSE, init.map = NULL, intoroidal = FALSE) {
+calcSOM <- function(data, train = NULL, weights = NULL, num_epochs = 200, resolution = 1, seed = NULL, init = NULL, init.FUN = map.init, parallel = F) {
+    if (is.null(train)) {
+      train <- 1:min(nrow(data), 5000)
+    }
     if (num_epochs < length(train) / 25) {
         lower_bound <- floor(length(train) / 25)
         warning(paste(num_epochs, "epochs is low for", length(train), "training genes, it was set to",
@@ -23,20 +27,26 @@ calcSOM <- function(data, sizemultiplier = 1, num_epochs = 200, train = NULL, se
         set.seed(seed)
     }
 
-    if (is.null(train)) {
-        train <- 1:min(nrow(data), 5000)
-    }
     data.train <- data[train, ]
     data.rest <- data[-train, ]
 
-    if (is.null(init.map)) {
-      init.map <- mapinit(data.train, sizemultiplier, intoroidal)
+    if (is.null(weights)) {
+      weights <- matrix(1L, nrow = nrow(data.train), ncol = ncol(data.train))
     }
-    # Handle output of mapinit
 
-    maxr <- min(0.5 * init.map$h, init.map$w)
-    test.som <- kohonen::som(data = data.train, grid = class::somgrid(init.map$w, init.map$h, "hexagonal"), rlen = num_epochs,
-        radius = c(maxr, 1), init = init.map$initgrid, toroidal = intoroidal)
+    if (is.null(init)) {
+      init <- do.call(init.FUN, list(data = data.train, resolution = resolution))
+    }
+
+    if (!parallel) {
+      maxr <- min(0.5 * init$h, init$w)
+      test.som <- kohonen::som(data = data.train, grid = class::somgrid(init$w, init$h, "hexagonal"), rlen = num_epochs,
+                               radius = c(maxr, 1), init = init$initgrid, toroidal = F)
+    }
+    else {
+      psom <- Rsomoclu::Rsomoclu.train(data.train, nEpoch = num_epochs, nSomX = init$w, nSomY = init$h, codebook = init$initgrid, radius0 = round(min(init$w, init$h)/2), radiusN = 1, radiusCooling = "linear", scale0 = 1, scaleN = 0.01, scaleCooling = "linear")
+      test.som <- Rsomoclu::Rsomoclu.kohonen(data.train, psom, n.hood = "circular")
+    }
 
     par(mfrow = c(2, 2))
     plot(test.som, type = "changes", main = "t")
@@ -48,61 +58,44 @@ calcSOM <- function(data, sizemultiplier = 1, num_epochs = 200, train = NULL, se
     return(test.som)
 }
 
-#' Initializes a SOM map with two PCA components
+#' Initializes a SOM map with the first two PCA components in a linear fashion
 #'
-#' @param datamat A numerical matrix or data.frame.
-#' @param prefactor A factor.
-#' @param toroidal If toroidal.
+#' @param data The training data of the SOM
+#' @param resolution A size factor increasing or decreasing the map resolution
 #'
-#' @return A list with intialization parameters.
-#'
-#' @export
-mapinit <- function(datamat, prefactor = 1, toroidal = FALSE) {
-    munits <- 5 * prefactor * sqrt(length(datamat[, 1]))
-    pcar <- prcomp(datamat)
-    ev <- pcar$sdev^2
-    if (ev[1] > 5 * ev[2]) {
-        h <- round(sqrt(munits * 5))
-    } else {
-        h <- round(sqrt(munits * ev[1] / ev[2]))
+#' @return A list with initialization parameters
+map.init <- function(data, resolution = 1) {
+  units <- 5 * resolution * sqrt(nrow(data))
+  phi <- (1 + sqrt(5))/2
+  h <- round(sqrt(units/phi))
+  w <- round(h + (h/phi))
+
+  pcar <- prcomp(data)
+  initcodes <- array(0, dim = c(h, w, ncol(data)))
+  gridshape <- array(0, dim = c(h * w, ncol(data)))
+  for (x in 1:w) {
+    for (y in 1:h) {
+      initcodes[y, x, ] <- (x / w) * pcar$rotation[, 2] + (y / h) * pcar$rotation[,1]
+      gridshape[(y - 1) * w + x, ] <- initcodes[y, x, ]
     }
-    w <- round(munits / h)
-    initcodes <- array(0, dim = c(h, w, length(datamat[1, ])))
-    gridshape <- array(0, dim = c(h * w, length(datamat[1, ])))
-    for (x in 1:w) {
-        for (y in 1:h) {
-            if (toroidal) {
-                initcodes[y, x, ] <- sin((pi * x) / w) * pcar$rotation[, 2] + sin((pi * y) / h) * pcar$rotation[,
-                  1]
-            } else {
-                initcodes[y, x, ] <- (x / w) * pcar$rotation[, 2] + (y / h) * pcar$rotation[, 1]
-            }
-            gridshape[(y - 1) * w + x, ] <- initcodes[y, x, ]
-        }
-    }
-    list(h = h, w = w, initgrid = gridshape)
+  }
+  list(h = h, w = w, initgrid = gridshape)
 }
 
-#' Initializes a SOM map with two PCA components
+#' Initializes a SOM map with the first two PCA components in a localized fashion
 #'
-#' @param datamat A numerical matrix or data.frame.
-#' @param prefactor A factor.
-#' @param toroidal If toroidal.
+#' @param data The training data of the SOM
+#' @param resolution A size factor increasing or decreasing the map resolution
 #'
-#' @return A list with intialization parameters.
-#'
-#' @export
-mapinit2 <- function(datamat, prefactor = 1, toroidal = FALSE) {
-  munits <- 5 * prefactor * sqrt(length(datamat[, 1]))
-  pcar <- prcomp(t(datamat))
-  ev <- pcar$sdev^2
-  if (ev[1] > 5 * ev[2]) {
-    h <- round(sqrt(munits * 5))
-  } else {
-    h <- round(sqrt(munits * ev[1] / ev[2]))
-  }
-  w <- round(munits / h)
-  gridshape <- array(0, dim = c(h * w, length(datamat[1, ])))
+#' @return A list with initialization parameters
+map.init.local <- function(data, resolution = 1) {
+  units <- 5 * resolution * sqrt(nrow(data))
+  phi <- (1 + sqrt(5))/2
+  h <- round(sqrt(units/phi))
+  w <- round(h + (h/phi))
+
+  pcar <- prcomp(data)
+  gridshape <- array(0, dim = c(h * w, ncol(data)))
 
   h_pos <- as.numeric(cut(pcar$x[,1], breaks=h))
   w_pos <- as.numeric(cut(pcar$x[,2], breaks=w))
@@ -113,13 +106,13 @@ mapinit2 <- function(datamat, prefactor = 1, toroidal = FALSE) {
   w_genes <- rownames(datamat)[order(abs(pcar$rotation[,2]), decreasing = T)[1:100]]
   genes <- unique(c(h_genes, w_genes))
 
-  for(i in 1:length(datamat[1, ])) {
+  for(i in 1:ncol(data)) {
     direct <- c(cell_pos[i], n[[cell_pos[i]]])
     second <- unique(unlist(sapply(direct, function(k) { n[[k]] })))
     third <- unique(unlist(sapply(second, function(k) { n[[k]] })))
-    gridshape[third,i] <- sum(1/3 * datamat[genes, i])
-    gridshape[second,i] <- gridshape[second,i] + sum(1/2 * datamat[genes, i])
-    gridshape[direct,i] <- gridshape[direct,i] + sum(datamat[genes, i])
+    gridshape[third,i] <- sum(1/3 * data[genes, i])
+    gridshape[second,i] <- gridshape[second,i] + sum(1/2 * data[genes, i])
+    gridshape[direct,i] <- gridshape[direct,i] + sum(data[genes, i])
   }
   list(h = h, w = w, initgrid = scale(gridshape))
 }

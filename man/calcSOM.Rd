@@ -2,30 +2,33 @@
 % Please edit documentation in R/clustering.R
 \name{calcSOM}
 \alias{calcSOM}
-\title{Calculates a self-organizing map}
+\title{Calculates a (weighted) self-organizing map}
 \usage{
-calcSOM(data, sizemultiplier = 1, num_epochs = 200, train = NULL,
-  seed = NULL, initrand = FALSE, init.map = NULL, intoroidal = FALSE)
+calcSOM(data, train = NULL, weights = NULL, num_epochs = 200,
+  resolution = 1, seed = NULL, init = NULL, init.FUN = map.init,
+  parallel = F)
 }
 \arguments{
 \item{data}{A numerical matrix or data.frame.}
 
-\item{sizemultiplier}{A size multiplier.}
+\item{train}{Row indices of training data.}
+
+\item{weights}{Additonal weights per row}
 
 \item{num_epochs}{How long the training should last.}
 
-\item{train}{Row indices of training data.}
+\item{resolution}{A multiplier for the map size}
 
 \item{seed}{A random seed (default NULL).}
 
-\item{initrand}{Whether initialization should be random (not recommended).}
+\item{init}{A list with initialization parameters.}
 
-\item{intoroidal}{If a toroidal map should be created.}
+\item{parallel}{Indicates if the parallel implementation should be used.}
 }
 \value{
 A som object.
 }
 \description{
-Calculates a self-organizing map
+Calculates a (weighted) self-organizing map
 }
 
