@@ -344,6 +344,8 @@ L2norm <- function(x) {
 #' @param kwargs A named list of parameters passed to HDBSCAN
 #'
 #' @return the clustered data
+#'
+#' @export
 hdbscan <- function(data, min.cluster.size = 5, min.samples = NULL, kwargs = NULL, return.data = T) {
   data <- as.matrix(data)
 
