@@ -26,4 +26,3 @@ colorIdentity(identity, data = NULL, data.name = NULL,
 \description{
 Plot cells along their fraction of identity to a given state
 }
-

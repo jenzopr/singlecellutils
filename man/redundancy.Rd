@@ -19,4 +19,3 @@ The amount of information provided by each variable within S about each state of
 \description{
 If we consider S = {X1 , X2 } and a target variable Z, the calculates the amount of information provided by each variable within S about each state of the target Z.
 }
-

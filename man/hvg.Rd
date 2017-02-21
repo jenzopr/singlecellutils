@@ -23,4 +23,3 @@ A list with the fit coefficients, the ordered variance and corresponding adjuste
 \description{
 Highly variable genes by Brennecke et. al.
 }
-

@@ -21,4 +21,3 @@ The winsorized vector
 \description{
 Winsorizes a vector to either a fraction or a absolute number
 }
-

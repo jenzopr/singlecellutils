@@ -24,4 +24,3 @@ A matrix with probabilites that a gene i in cell j is not expressed, given that 
 \description{
 Calculates weights/probabilities based on false-negative curves.
 }
-

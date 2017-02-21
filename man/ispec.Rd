@@ -19,4 +19,3 @@ The information provided by x about a specific state of y
 \description{
 Calculates the specific information which quantifies the information provided by one variable about a specific state of another variable [89, 90]
 }
-

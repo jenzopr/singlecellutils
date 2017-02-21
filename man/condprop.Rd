@@ -17,4 +17,3 @@ A vector with conditional propabilities.
 \description{
 Calculates the conditional propability p(x|given) for two vectors
 }
-

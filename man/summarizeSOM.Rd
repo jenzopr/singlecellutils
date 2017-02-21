@@ -23,4 +23,3 @@ A summarized SOM codes matrix. Each column corresponds to a list element from th
 \description{
 Calculates a summarized som for a list of components
 }
-

@@ -24,4 +24,3 @@ array containing the (N+1) bin edges
 \description{
 Wrapper for astroML.density_estimation.bayesian_blocks
 }
-

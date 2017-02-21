@@ -26,4 +26,3 @@ A list with the following components:
 \description{
 Calculate the Theil's T statistic for each gene and normalize it to the dropout rate. Also calculates a p-value for the residual deviation from a normal distribution.
 }
-

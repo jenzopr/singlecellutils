@@ -31,4 +31,3 @@ A som object.
 \description{
 Calculates a (weighted) self-organizing map
 }
-

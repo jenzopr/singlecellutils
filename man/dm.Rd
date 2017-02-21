@@ -21,4 +21,3 @@ A vector with the distances to the median.
 \description{
 Calculate the distance to the median
 }
-

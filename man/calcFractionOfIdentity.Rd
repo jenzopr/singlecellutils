@@ -21,4 +21,3 @@ order - a matrix with one column per state, giving the decreasing order of the c
 Orders cells along a pseudotime between two or more known states.
 This method implements the fraction of identity approach of Treutlein et. al. (2016)
 }
-

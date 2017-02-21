@@ -21,4 +21,3 @@ A colored polygon
 \description{
 Creates a polygon
 }
-

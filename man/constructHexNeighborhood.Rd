@@ -19,4 +19,3 @@ A list of length n*q with their neighbors on the grid.
 \description{
 Construct the neighborhood of a hexagonal r*q matrix
 }
-

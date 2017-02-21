@@ -21,4 +21,3 @@ The evaluated function value.
 Returns the value of the sigmoid function
 1 - (1 / (1 + exp(a + (b*x)))
 }
-

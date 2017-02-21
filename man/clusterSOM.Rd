@@ -28,4 +28,3 @@ A clustering of the SOM.
 \description{
 Clusters a SOM into k regions determined by k-means
 }
-

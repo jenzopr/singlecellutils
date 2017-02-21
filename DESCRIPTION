@@ -24,7 +24,8 @@ Imports:
     viridis,
     lsr,
     rPython,
-    Rsomoclu
-RoxygenNote: 5.0.1
+    Rsomoclu,
+    boot
+RoxygenNote: 6.0.1
 Suggests: genefilter,
     lintr

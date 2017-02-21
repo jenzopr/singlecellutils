@@ -15,4 +15,3 @@ The L2 norm of x.
 \description{
 Calculates the L2 norm of a numeric vector
 }
-

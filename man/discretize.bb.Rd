@@ -17,4 +17,3 @@ A discretized matrix
 \description{
 Discretize a matrix using the bayesian blocks algorithm
 }
-

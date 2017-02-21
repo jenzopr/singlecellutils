@@ -17,4 +17,3 @@ Row indices or data row names for each node or each cluster as a list.
 \description{
 Extracts the rows of the data matrix underlying each SOM node.
 }
-

@@ -21,4 +21,3 @@ The gene-specific drop-out rate
 \description{
 Caclulates drop-outs based on burst size and frequency
 }
-

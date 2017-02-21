@@ -28,4 +28,3 @@ A ggplot2 figure.
 \description{
 Creates a sorted bar plot.
 }
-

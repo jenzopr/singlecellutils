@@ -21,4 +21,3 @@ colortSNE(tsne, data, data.name = NULL,
 \description{
 A function to color a tSNE map based on a vector.
 }
-

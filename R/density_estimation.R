@@ -104,3 +104,5 @@ condprop <- function(x,given) {
   xy
   #diag(xy[as.character(x), as.character(given)])
 }
+
+

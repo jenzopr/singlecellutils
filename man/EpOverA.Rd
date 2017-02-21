@@ -17,4 +17,3 @@ A function with bindings for A.
 \description{
 EpOverA returns a filter function with bindings for A. This function evaluates to TRUE if the aggregate of the arguments elements are larger than A.
 }
-

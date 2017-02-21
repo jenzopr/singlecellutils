@@ -16,4 +16,3 @@ hvg.plot(data, hvg.fit, n = 500)
 \description{
 Draws a smoothScatter-Plot with hvg fit line and highlighted variable genes.
 }
-

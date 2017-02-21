@@ -27,4 +27,3 @@ The matrix of color codes (invisible)
 \description{
 Visualizes SOM components
 }
-

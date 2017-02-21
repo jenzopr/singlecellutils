@@ -26,4 +26,3 @@ A vector with the summarized statistic
 \description{
 A generic function to normalize a statistic by a summary statistic across windows
 }
-

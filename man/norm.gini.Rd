@@ -21,4 +21,3 @@ A vector with gini indices.
 \description{
 Calculates the gini index
 }
-

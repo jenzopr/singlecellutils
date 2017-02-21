@@ -23,4 +23,3 @@ Theil's T statistic for x
 \description{
 Calculate Theil's T-Statistic for a vector
 }
-

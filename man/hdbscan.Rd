@@ -22,4 +22,3 @@ the clustered data
 \description{
 A wrapper for running HDBSCAN in python
 }
-

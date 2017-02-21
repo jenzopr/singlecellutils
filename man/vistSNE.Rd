@@ -26,4 +26,3 @@ The augmented input data matrix. Clusters are added in .cluster column.
 \description{
 Visualizes tSNE maps with colored clusters by pam.
 }
-

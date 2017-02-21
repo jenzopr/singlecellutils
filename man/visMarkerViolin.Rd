@@ -17,4 +17,3 @@ A ggplot2 figure.
 \description{
 Creates a violin plot for selected genes
 }
-

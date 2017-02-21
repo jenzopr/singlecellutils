@@ -24,4 +24,3 @@ An FPM expression matrix
 \description{
 Simulates an single-cell RNA-seq experiment
 }
-

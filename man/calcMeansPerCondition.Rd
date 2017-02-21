@@ -14,4 +14,3 @@ calcMeansPerCondition(data, condition, log = T)
 \description{
 Calculates means per condition
 }
-

@@ -17,4 +17,3 @@ A list with initialization parameters
 \description{
 Initializes a SOM map with the first two PCA components in a linear fashion
 }
-

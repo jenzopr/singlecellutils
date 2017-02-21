@@ -17,4 +17,3 @@ The cluster centers
 \description{
 Calculates cluster centers based on a probability threshold.
 }
-
