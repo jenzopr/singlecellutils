@@ -33,29 +33,44 @@ vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T, medoids =
   return(invisible(broom::augment(cl, tsne)))
 }
 
-#' A function to color a tSNE map based on a vector.
+#' A function to color observations on a map based on values of a vector.
 #'
-#' @param tsne The data matrix from a tSNE dimension reduction call
-#' @param data A numerical vector on which the coloring is based
-#' @param data.name The name of the data, shown in plot.main
+#' @param data The data matrix with observation coordinates in the first two columns.
+#' @param values A numerical vector on which the coloring is based, or a numeric or character of length 1 indicating the column of the data matrix from which to take the values.
 #' @param palette The color palette
+#' @param title The name of the data, shown in plot.main
+#' @param outlier.col The color of outlier points (\code{NA} in \code{values})
+#' @param outlier.pch The symbol for outlier points (\code{NA} in \code{values})
 #' @param ... Other parameters passed to plot
 #'
-#' @return NULL
+#' @return Invisibly returns the color code for each observation.
 #'
 #' @export
-colortSNE <- function(tsne, data, data.name = NULL, palette = RColorBrewer::brewer.pal(10, "Dark2"), ...) {
-  if (length(data) != nrow(tsne)) {
-    stop("Data is not same length as tsne.")
+colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(10, "Dark2"), title = NULL, outlier.col = "darkgrey", outlier.pch = 4, ...) {
+  if (length(values) != nrow(data) & length(values) > 1) {
+    stop("Values are not of same length as data and more than one value given")
   }
-  if (!is.null(data.name)) {
-    main <- data.name
+  if (!is.null(title)) {
+    main <- title
   } else {
     main <- ""
   }
-  color <- palette[as.numeric(cut(data, breaks = length(palette)))]
-  plot(tsne[, 1], tsne[, 2], xlab = "tSNE dimension 1", ylab = "tSNE dimension 2", main = main, col = color, ...)
-  return(invisible(NULL))
+
+  if (length(values) == 1 & ncol(data) <= values) {
+    values <- as.numeric(data[, values])
+  }
+
+  if (unique(values) <= length(palette)) {
+    color <- palette[values]
+  } else {
+    color <- palette[as.numeric(cut(values, breaks = length(palette)))]
+  }
+
+  plot(data[, 1], data[, 2], xlab = "Dimension 1", ylab = "Dimension 2", main = main, col = color, ...)
+  if (any(is.na(values))) {
+    points(data[is.na(values), 1], data[is.na(values), 2], col = outlier.col, pch = outlier.pch)
+  }
+  return(invisible(color))
 }
 
 #' Creates a sorted bar plot.
@@ -130,7 +145,7 @@ visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "a
 
   scaling <- match.arg(scale)
   som$codes <- switch(scaling,
-                      minmax = apply(som$codes, 2, function(x) 2 * (x - min(x)) / (max(x) - min(x)) - 1),
+                      minmax = apply(som$codes, 2, function(x) 2 * (x + .Machine$double.eps - min(x)) / (max(x) - min(x)) - 1),
                       zscore = scale(som$codes),
                       som$codes)
 
