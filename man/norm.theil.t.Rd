@@ -4,7 +4,7 @@
 \alias{norm.theil.t}
 \title{Calculate the Theil's T statistic for each gene and normalize it to the dropout rate. Also calculates a p-value for the residual deviation from a normal distribution.}
 \usage{
-norm.theil.t(data, use.quantile = 0.2, ...)
+norm.theil.t(data, use.quantile = 0.05, ...)
 }
 \arguments{
 \item{data}{A numerical matrix or data.frame.}

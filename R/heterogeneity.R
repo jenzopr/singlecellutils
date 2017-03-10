@@ -1,16 +1,157 @@
-#' Calculate the distance to the median
+#' Calculates the coefficient of variation
 #'
-#' @param data A numerical matrix or data.frame.
-#' @param window The window size to calculate the summary statistic in.
-#' @param normalize Whether or not to normalize to the standard deviation.
-#' @param func The function to calculate the summary statistic within windows.
+#' @param x The vector of values
 #'
-#' @return A vector with the distances to the median.
+#' @return The coefficient of variation for x
 #'
 #' @export
-dm <- function(data, ...) {
-    ret <- normByWindow(data = data, ..., stat_fun = cv2.fun)
-    ret
+cv2.fun <- function(x) {
+  x <- x[!is.na(x)]
+  if (mean(x) == 0) {
+    return(0)
+  }
+  var(x) / mean(x)^2
+}
+
+#' Calculates the drouput percentage
+#'
+#' @param x The vector of values
+#' @param limit The detection limit
+#' @return The percentage of dropouts
+#'
+#' @export
+dropout.fun <- function(x, limit=0) {
+  x <- x[!is.na(x)]
+  sum(x<=limit)/length(x)
+}
+
+#' Calculates the gini index
+#'
+#' @param x The vector of values
+#' @return The gini index for x
+#'
+#' @export
+gini.fun <- function(x) {
+  x <- x[!is.na(x)]
+  lawstat::gini.index(x)$statistic
+}
+
+#' Calculates the inequality of a numeric vector
+#'
+#' @param c The numeric vector of values
+#' @return The inequality measure for x
+#'
+#' @export
+inequality.fun <- function(x) {
+  x <- x[!is.na(x)]
+  Y <- sum(x, na.rm = T)
+  return(sum(x / Y * log( x/Y * length(x)), na.rm = T))
+}
+
+#' Calculates various heterogeneity statistics
+#'
+#' @param data A numerical matrix
+#' @param statistic The heterogeneity measure to calculate. Can be \code{cv} for the coefficient of variation, \code{dropout} for the percentage of dropouts, \code{gini} for the gini index or \code{inequality} for Theil's T statistic.
+#' @param normalization The normalization method. Can be \code{none} for no normalization, \code{bins} to normalize in bins calculated from the mean or \code{windows} to normalize within rolling windows.
+#' @param order_by A numeric vector by which the calculated statistic should be ordered in case of normalization.
+#' @param ... Additional arguments passed to the normalization functions.
+#'
+#' @return The statistics value for each observation.
+#'
+#' @export
+heterogeneity <- function(data, statistic = c("cv", "dropout", "gini", "inequality"), normalization = c("none", "bins", "windows"), order_by = log2(rowMeans(data / 10, na.rm = T) + 1), ...) {
+  # Transform the data based on the statistic given
+  stat <- match.arg(statistic)
+  transformed_data <- switch(stat,
+                             cv = apply(data, 1, cv2.fun),
+                             dropout = apply(data, 1, dropout.fun),
+                             gini = apply(data, 1, gini.fun),
+                             inequality = apply(data, 1, inequality.fun))
+
+  # Normalize data
+  norm <- match.arg(normalization)
+  ret <- switch(norm,
+                none = transformed_data,
+                bins = normByBin(transformed_data, order_by = order_by, ...),
+                windows = normByWindow(transformed_data, order_by = order_by, ...))
+  ret
+}
+
+#' A generic function to normalize a statistic by binning another statistic
+#'
+#' @param stat A numeric vector.
+#' @param order_by A numeric vector to bin by.
+#' @param func A function to summarize the statistic within a bin.
+#' @param n_bins The number of bins to create.
+#' @param normalize Whether or not to normalize to the standard deviation.
+#'
+#' @return A vector with the difference to the summarized statistic
+#'
+#' @export
+normByBin <- function(stat, order_by = stat, func = mean, n_bins = 30, normalize = TRUE) {
+  if (is.null(names(stat))) {
+    names(stat) <- 1:length(stat)
+  }
+
+  bins <- split(stat, lsr::quantileCut(order_by, n_bins))
+  bin_summary <- sapply(bins, function(s) {
+    in_bin <- names(s)
+    func(stat[in_bin])
+  })
+
+  if (normalize) {
+    bin_sd <- sapply(bins, function(s) {
+      in_bin <- names(s)
+      sd(stat[in_bin])
+    })
+  } else {
+    bin_sd <- rep(1, n_bins)
+  }
+
+  ret_l <- sapply(1:n_bins, function(i) {
+    in_bin <- names(bins[[i]])
+    (stat[in_bin] - bin_summary[i]) / bin_sd[i]
+  })
+  unlist(ret_l)
+}
+
+#' A generic function to normalize a statistic by a summary statistic across windows
+#'
+#' @param stat A numeric vector.
+#' @param order_by A numeric vector to order stat by.
+#' @param func A function to summarize the statistic within a window.
+#' @param window The window size to calculate the summary statistic in.
+#' @param normalize Whether or not to normalize to the standard deviation.
+#'
+#' @return A vector with the difference to the summarized statistic
+#'
+#' @export
+normByWindow <- function(stat, order_by = stat, func = median, window = 100, normalize = TRUE) {
+  if (is.null(names(stat))) {
+    names(stat) <- 1:length(stat)
+  }
+
+  # Assign names to norm_to
+  names(order_by) <- names(stat)
+
+  # Sort the means
+  s <- names(sort(order_by))
+
+  # Calculate summary statistic in a window of x genes
+  r <- zoo::rollapply(data = stat[s], width = window, FUN = func, fill = "extend")
+  r2 <- zoo::rollapply(data = stat[s], width = window, FUN = sd, fill = "extend")
+  names(r) <- s
+  names(r2) <- s
+
+  if (normalize) {
+    # Return standardized distance to the summary statistic
+    ret <- (stat - r[names(stat)]) / r2[names(stat)]
+  } else {
+    ret <- stat - r[names(stat)]
+  }
+
+  ret[is.na(ret)] <- 0
+  ret
 }
 
 #' Calculate the Theil's T statistic for each gene and normalize it to the dropout rate. Also calculates a p-value for the residual deviation from a normal distribution.
@@ -29,9 +170,9 @@ dm <- function(data, ...) {
 #'  }
 #'
 #' @export
-norm.theil.t <- function(data, use.quantile = 0.2, ...) {
+norm.theil.t <- function(data, use.quantile = 0.05, ...) {
   dropin <- 1 - apply(data, 1, function(x) sum(x == 0) / length(x))
-  theil <- apply(data, 1, theils.t, ...)
+  theil <- apply(data, 1, expression.inequality)#, ...)
 
   # Fit model
   use <- theil > quantile(theil, use.quantile)
@@ -52,67 +193,6 @@ norm.theil.t <- function(data, use.quantile = 0.2, ...) {
     dropin = dropin[o],
     pval = pval[o]
   ))
-}
-
-#' Calculates the gini index
-#'
-#' @param data A numerical matrix or data.frame
-#' @param window The window size to calculate the summary statistic in.
-#' @param normalize Whether or not to normalize to the standard deviation.
-#' @param func The function to calculate the summary statistic within windows.
-#'
-#' @return A vector with gini indices.
-#'
-#' @export
-norm.gini <- function(data, winsorize = FALSE, ...) {
-    if (winsorize) {
-        gini.fun <- function(x) lawstat::gini.index(winsorize(x))$statistic
-    } else {
-        gini.fun <- function(x) lawstat::gini.index(x)$statistic
-    }
-    ret <- normByWindow(data = data, ..., stat_fun = gini.fun)
-    ret
-}
-
-#' A generic function to normalize a statistic by a summary statistic across windows
-#'
-#' @param data A numerical matrix or data.frame.
-#' @param stat_fun A function to calculate the statistic.
-#' @param norm_to A numeric vector to normalize to.
-#' @param func A function to summarize the statistic within a window.
-#' @param window The window size to calculate the summary statistic in.
-#' @param normalize Whether or not to normalize to the standard deviation.
-#'
-#' @return A vector with the summarized statistic
-normByWindow <- function(data, stat_fun = NULL, norm_to = log2(rowMeans(data / 10) + 1), func = median, window = 100, normalize = TRUE) {
-    if (is.null(rownames(data))) {
-        rownames(data) <- 1:nrow(data)
-    }
-
-    # Assign names to norm_to
-    names(norm_to) <- rownames(data)
-
-    # Calculate the statistic with the supplied function
-    stat <- apply(data, 1, stat_fun)
-
-    # Sort the means
-    s <- names(sort(norm_to))
-
-    # Calculate summary statistic in a window of x genes
-    r <- zoo::rollapply(data = stat[s], width = window, FUN = func, fill = "extend")
-    r2 <- zoo::rollapply(data = stat[s], width = window, FUN = sd, fill = "extend")
-    names(r) <- s
-    names(r2) <- s
-
-    if (normalize) {
-        # Return standardized distance to the summary statistic
-        ret <- (stat - r[names(stat)]) / r2[names(stat)]
-    } else {
-        ret <- stat - r[names(stat)]
-    }
-
-    ret[is.na(ret)] <- 0
-    ret
 }
 
 #' Winsorizes a vector to either a fraction or a absolute number
@@ -160,7 +240,7 @@ theils.t <- function(x, winsorize = FALSE, treat.zeros = "exclude", epsilon = 0,
     exclude = x[!(x == 0)],
     epsilon = x + epsilon
   )
-  m <- mean(x)
+  m <- mean(x, na.rm = T)
   n <- length(x)
   te <- x / m * log(x / m)
   1 / n * sum(te, na.rm = T)
@@ -197,14 +277,6 @@ theils.within <- function(x, groups) {
   return(T)
 }
 
-cv2.fun <- function(x) {
-  x <- x[!is.na(x)]
-  if (mean(x) == 0) {
-    return(0)
-  }
-  log2(var(x) / mean(x)^2 + 1)
-}
-
 #' Highly variable genes by Brennecke et. al.
 #'
 #' @param data A normalized count table.
@@ -233,4 +305,50 @@ hvg <- function(data, min.cv2 = .3, mean.quantile = .95, padj.method = "fdr") {
   pval <- pchisq(varFitRatio * df, df = df, lower.tail = F)
   adj.pval <- p.adjust(pval, method = padj.method)
   list(a0 = a0, a1 = a1, order = varorder, pval = adj.pval[varorder], df = df)
+}
+
+
+theil.neu <- function(data, min.size = 100, cutoff = 5, ...) {
+  dropin <- 1 - apply(data, 1, function(x) sum(x < cutoff) / length(x))
+  theil <- apply(data, 1, expression.inequality)#, ...)
+  data.nz <- data
+  data.nz[data.nz < cutoff] <- NA
+  mean.nz <- rowMeans(log2(data.nz+1), na.rm = T)
+
+  use <- mean.nz < quantile(mean.nz, 0.8, na.rm = T) & mean.nz > quantile(mean.nz, 0.2, na.rm = T)
+
+  smoothScatter(mean.nz[use], theil[use])
+  smoothScatter(dropin[use], theil[use])
+  smoothScatter(dropin[use], log(theil[use]+1))
+  smoothScatter(mean.nz[use], dropin[use])
+
+  # Fit model
+  fit <- lm(log(theil[use] + 1)~dropin[use])
+  i <- fit$coefficients[1]
+  d <- fit$coefficients[2]
+
+  theoretical <- exp(i + d * dropin) - 1
+  smoothScatter(dropin[use], theil[use])
+  smoothScatter(dropin[use], theoretical[use])
+
+  res <- theil - theoretical
+  z <- (res - mean(res))/sd(res)
+  #smoothScatter(dropin[use], res[use], col="red")
+  pval <- pnorm(z, lower.tail = F)
+  p.adj <- p.adjust(pval, method="fdr")
+
+  smoothScatter(dropin, theil)
+  points(dropin[pval < 0.05], theil[pval < 0.05], col="red")
+  smoothScatter(rowMeans(log10(data+1)), dropin)
+  points(rowMeans(log10(data+1))[pval < 0.05], dropin[pval < 0.05], col="red")
+
+  # Order by pval and assemble return
+  o <- order(pval)
+  return(list(
+    d = d,
+    i = i,
+    theils.t = theil[o],
+    dropin = dropin[o],
+    pval = pval[o]
+  ))
 }
