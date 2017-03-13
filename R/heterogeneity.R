@@ -172,7 +172,7 @@ normByWindow <- function(stat, order_by = stat, func = median, window = 100, nor
 #' @export
 norm.theil.t <- function(data, use.quantile = 0.05, ...) {
   dropin <- 1 - apply(data, 1, function(x) sum(x == 0) / length(x))
-  theil <- apply(data, 1, expression.inequality)#, ...)
+  theil <- apply(data, 1, inequality.fun)#, ...)
 
   # Fit model
   use <- theil > quantile(theil, use.quantile)
