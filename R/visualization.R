@@ -247,14 +247,18 @@ hvg.plot <- function(data, hvg.fit, n = 500) {
   vars <- apply(data, 1, var)
   cv2 <- vars / means^2
 
-  smoothScatter(log(means), log(cv2), xlab = "Average normalized read count", ylab = "Squared coefficient of variation")
   xg <- exp(seq(min(log(means[means > 0])), max(log(means)), length.out = 1000))
-  vfit <- hvg.fit$a1 / xg + hvg.fit$a0
-  lines(log(xg), log(vfit), col = "black", lwd = 3)
-  lines(log(xg), log(vfit * qchisq(0.975, hvg.fit$df) / hvg.fit$df), lty = 2, col = "black")
-  lines(log(xg), log(vfit * qchisq(0.025, hvg.fit$df) / hvg.fit$df), lty = 2, col = "black")
 
-  points(log(means[hvg.fit$order[1:n]]), log(cv2[hvg.fit$order[1:n]]), col = 2)
+  p <- lattice::xyplot(log(cv2) ~ log(means), xlab = "Average normalized read count", ylab = "Squared coefficient of variation",
+              panel = function(x, y, ...) {
+                lattice::panel.xyplot(x, y, ...)
+                vfit <- hvg.fit$a1 / xg + hvg.fit$a0
+                lattice::panel.lines(log(xg), log(vfit), col = 2)
+                lattice::panel.lines(log(xg), log(vfit * qchisq(0.975, hvg.fit$df) / hvg.fit$df), lty = 2, col = 2)
+                lattice::panel.lines(log(xg), log(vfit * qchisq(0.025, hvg.fit$df) / hvg.fit$df), lty = 2, col = 2)
+                lattice::panel.points(x[hvg.fit$order[1:n]], y[hvg.fit$order[1:n]], col = 2)
+              }, col = "black", hvg.fit = hvg.fit, xg = xg, n = n)
+  return(p)
 }
 
 #' Plot cells along their fraction of identity to a given state

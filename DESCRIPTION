@@ -25,7 +25,8 @@ Imports:
     lsr,
     rPython,
     Rsomoclu,
-    boot
+    boot,
+    lattice
 RoxygenNote: 6.0.1
 Suggests: genefilter,
     lintr
