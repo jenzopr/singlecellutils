@@ -56,11 +56,11 @@ colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(10, "Dark
     main <- ""
   }
 
-  if (length(values) == 1 & ncol(data) <= values) {
+  if (length(values) == 1 & ncol(data) <= length(values)) {
     values <- as.numeric(data[, values])
   }
 
-  if (unique(values) <= length(palette)) {
+  if (length(unique(values)) <= length(palette)) {
     color <- palette[values]
   } else {
     color <- palette[as.numeric(cut(values, breaks = length(palette)))]
