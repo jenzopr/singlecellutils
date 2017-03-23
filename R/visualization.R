@@ -61,10 +61,9 @@ colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(10, "Dark
   }
 
   if (length(unique(values)) <= length(palette)) {
-    color <- palette[values]
-  } else {
-    color <- palette[as.numeric(cut(values, breaks = length(palette)))]
+    warning("Less unique data values than colors in palette.. reducing palette.")
   }
+  color <- palette[as.numeric(cut(values, breaks = length(palette)))]
 
   plot(data[, 1], data[, 2], xlab = "Dimension 1", ylab = "Dimension 2", main = main, col = color, ...)
   if (any(is.na(values))) {
