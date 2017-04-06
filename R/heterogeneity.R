@@ -33,12 +33,16 @@ dropout.fun <- function(x, limit=0) {
 #' @export
 gini.fun <- function(x) {
   x <- x[!is.na(x)]
-  lawstat::gini.index(x)$statistic
+  #lawstat::gini.index(x)$statistic
+  ox = x[order(x)]
+  n = length(x)
+  dsum = drop(crossprod(2 * 1:n - n - 1, ox))
+  dsum / (mean(x) * n * (n - 1))
 }
 
 #' Calculates the inequality of a numeric vector
 #'
-#' @param c The numeric vector of values
+#' @param x The numeric vector of values
 #' @return The inequality measure for x
 #'
 #' @export
@@ -46,6 +50,16 @@ inequality.fun <- function(x) {
   x <- x[!is.na(x)]
   Y <- sum(x, na.rm = T)
   return(sum(x / Y * log( x/Y * length(x)), na.rm = T))
+}
+
+#' Calculates the inequality between and within groups
+#'
+#' @param x The numeric vector of values
+#' @param g The grouping factor
+#' @return
+#' @export
+bw.inequality.fun <- function(x, g) {
+  sum(theils.between(x, g)) / sum(theils.within(x, g))
 }
 
 #' Calculates various heterogeneity statistics
@@ -59,14 +73,16 @@ inequality.fun <- function(x) {
 #' @return The statistics value for each observation.
 #'
 #' @export
-heterogeneity <- function(data, statistic = c("cv", "dropout", "gini", "inequality"), normalization = c("none", "bins", "windows"), order_by = log2(rowMeans(data / 10, na.rm = T) + 1), ...) {
+heterogeneity <- function(data, statistic = c("cv", "dropout", "gini", "inequality", "bwt", "mean"), normalization = c("none", "bins", "windows"), order_by = log2(rowMeans(data / 10, na.rm = T) + 1), groups = NULL, ...) {
   # Transform the data based on the statistic given
   stat <- match.arg(statistic)
   transformed_data <- switch(stat,
                              cv = apply(data, 1, cv2.fun),
                              dropout = apply(data, 1, dropout.fun),
+                             mean = log(rowMeans(data))/log(10),
                              gini = apply(data, 1, gini.fun),
-                             inequality = apply(data, 1, inequality.fun))
+                             inequality = apply(data, 1, inequality.fun),
+                             bwt = apply(data, 1, bw.inequality.fun, g = groups))
 
   # Normalize data
   norm <- match.arg(normalization)
