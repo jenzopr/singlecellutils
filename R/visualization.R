@@ -40,13 +40,12 @@ vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T, medoids =
 #' @param palette The color palette
 #' @param title The name of the data, shown in plot.main
 #' @param outlier.col The color of outlier points (\code{NA} in \code{values})
-#' @param outlier.pch The symbol for outlier points (\code{NA} in \code{values})
 #' @param ... Other parameters passed to plot
 #'
 #' @return Invisibly returns the color code for each observation.
 #'
 #' @export
-colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(10, "Dark2"), title = NULL, outlier.col = "darkgrey", outlier.pch = 4, ...) {
+colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(10, "Dark2"), title = NULL, outlier.col = "darkgrey", ...) {
   if (length(values) != nrow(data) & length(values) > 1) {
     stop("Values are not of same length as data and more than one value given")
   }
@@ -65,11 +64,15 @@ colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(10, "Dark
   }
   color <- palette[as.numeric(cut(values, breaks = length(palette)))]
 
-  plot(data[, 1], data[, 2], xlab = "Dimension 1", ylab = "Dimension 2", main = main, col = color, ...)
+  plot_dat <- data.frame(x = data[, 1], y = data[, 2], values = values, col = color)
   if (any(is.na(values))) {
-    points(data[is.na(values), 1], data[is.na(values), 2], col = outlier.col, pch = outlier.pch)
+    plot_dat$col[is.na(values)] = outlier.col
   }
-  return(invisible(color))
+
+  #plot(data[, 1], data[, 2], xlab = "Dimension 1", ylab = "Dimension 2", main = main, col = color, ...)
+  p <- lattice::xyplot(y ~ x, plot_dat, xlab = "Dimension 1", ylab = "Dimension 2", main = main, par.settings = list(superpose.symbol = list(col = color, ...)))
+
+  return(p)
 }
 
 #' Creates a sorted bar plot.

@@ -5,7 +5,7 @@
 \title{A function to color observations on a map based on values of a vector.}
 \usage{
 colorAMap(data, values, palette = RColorBrewer::brewer.pal(10, "Dark2"),
-  title = NULL, outlier.col = "darkgrey", outlier.pch = 4, ...)
+  title = NULL, outlier.col = "darkgrey", ...)
 }
 \arguments{
 \item{data}{The data matrix with observation coordinates in the first two columns.}
@@ -17,8 +17,6 @@ colorAMap(data, values, palette = RColorBrewer::brewer.pal(10, "Dark2"),
 \item{title}{The name of the data, shown in plot.main}
 
 \item{outlier.col}{The color of outlier points (\code{NA} in \code{values})}
-
-\item{outlier.pch}{The symbol for outlier points (\code{NA} in \code{values})}
 
 \item{...}{Other parameters passed to plot}
 }
