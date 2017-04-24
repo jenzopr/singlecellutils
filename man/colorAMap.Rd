@@ -4,7 +4,7 @@
 \alias{colorAMap}
 \title{A function to color observations on a map based on values of a vector.}
 \usage{
-colorAMap(data, values, palette = RColorBrewer::brewer.pal(10, "Dark2"),
+colorAMap(data, values, palette = RColorBrewer::brewer.pal(8, "Dark2"),
   title = NULL, outlier.col = "darkgrey", ...)
 }
 \arguments{
@@ -18,10 +18,10 @@ colorAMap(data, values, palette = RColorBrewer::brewer.pal(10, "Dark2"),
 
 \item{outlier.col}{The color of outlier points (\code{NA} in \code{values})}
 
-\item{...}{Other parameters passed to plot}
+\item{...}{Other parameters passed to lattice::xyplot}
 }
 \value{
-Invisibly returns the color code for each observation.
+A lattice xyplot.
 }
 \description{
 A function to color observations on a map based on values of a vector.

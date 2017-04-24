@@ -40,12 +40,12 @@ vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T, medoids =
 #' @param palette The color palette
 #' @param title The name of the data, shown in plot.main
 #' @param outlier.col The color of outlier points (\code{NA} in \code{values})
-#' @param ... Other parameters passed to plot
+#' @param ... Other parameters passed to lattice::xyplot
 #'
-#' @return Invisibly returns the color code for each observation.
+#' @return A lattice xyplot.
 #'
 #' @export
-colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(10, "Dark2"), title = NULL, outlier.col = "darkgrey", ...) {
+colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(8, "Dark2"), title = NULL, outlier.col = "darkgrey", ...) {
   if (length(values) != nrow(data) & length(values) > 1) {
     stop("Values are not of same length as data and more than one value given")
   }
@@ -64,14 +64,11 @@ colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(10, "Dark
   }
   color <- palette[as.numeric(cut(values, breaks = length(palette)))]
 
-  plot_dat <- data.frame(x = data[, 1], y = data[, 2], values = values, col = color)
   if (any(is.na(values))) {
-    plot_dat$col[is.na(values)] = outlier.col
+    color[is.na(values)] = outlier.col
   }
 
-  #plot(data[, 1], data[, 2], xlab = "Dimension 1", ylab = "Dimension 2", main = main, col = color, ...)
-  p <- lattice::xyplot(y ~ x, plot_dat, xlab = "Dimension 1", ylab = "Dimension 2", main = main, par.settings = list(superpose.symbol = list(col = color, ...)))
-
+  p <- lattice::xyplot(data[, 2] ~ data[, 1], xlab = "Dimension 1", ylab = "Dimension 2", main = main, col = color, ...)
   return(p)
 }
 
