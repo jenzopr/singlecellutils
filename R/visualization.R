@@ -45,7 +45,7 @@ vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T, medoids =
 #' @return A lattice xyplot.
 #'
 #' @export
-colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(8, "Dark2"), title = NULL, outlier.col = "darkgrey", ...) {
+colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(8, "Dark2"), title = NULL, outlier.col = "darkgrey", xlab = "Dimension 1", ylab = "Dimension 2", ...) {
   if (length(values) != nrow(data) & length(values) > 1) {
     stop("Values are not of same length as data and more than one value given")
   }
@@ -68,7 +68,7 @@ colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(8, "Dark2
     color[is.na(values)] = outlier.col
   }
 
-  p <- lattice::xyplot(data[, 2] ~ data[, 1], xlab = "Dimension 1", ylab = "Dimension 2", main = main, col = color, ...)
+  p <- lattice::xyplot(data[, 2] ~ data[, 1], xlab = xlab, ylab = ylab, main = main, col = color, ...)
   return(p)
 }
 

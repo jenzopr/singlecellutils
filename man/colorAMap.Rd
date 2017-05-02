@@ -5,7 +5,8 @@
 \title{A function to color observations on a map based on values of a vector.}
 \usage{
 colorAMap(data, values, palette = RColorBrewer::brewer.pal(8, "Dark2"),
-  title = NULL, outlier.col = "darkgrey", ...)
+  title = NULL, outlier.col = "darkgrey", xlab = "Dimension 1",
+  ylab = "Dimension 2", ...)
 }
 \arguments{
 \item{data}{The data matrix with observation coordinates in the first two columns.}
