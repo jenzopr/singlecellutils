@@ -1,18 +1,19 @@
 #' Calculate IC values for a data matrix (genes-by-cells)
 #'
 #' @param data Data matrix
+#' @param p.val The p-value cutoff for correlation values to use in calculations
 #'
 #' @return The IC value
 #' @export
-computeIC <- function(data) {
+computeIC <- function(data, p.val = 0.01) {
   d <- data
 
-  r <- rcorr(t(d), type="pearson")
-  use <- (r$P < 0.01 & !is.na(r$P) & upper.tri(r$r))
+  r <- Hmisc::rcorr(t(d), type="pearson")
+  use <- (r$P < p.val & !is.na(r$P) & upper.tri(r$r))
   within <- as.vector(abs(r$r[use]))
 
-  r <- rcorr(d, type="pearson")
-  use <- (r$P < 0.01 & !is.na(r$P) & upper.tri(r$r))
+  r <- Hmisc::rcorr(d, type="pearson")
+  use <- (r$P < p.val & !is.na(r$P) & upper.tri(r$r))
   between <- as.vector(r$r[use])
 
   mean(within) / mean(between)

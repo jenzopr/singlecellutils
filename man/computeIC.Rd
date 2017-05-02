@@ -4,10 +4,12 @@
 \alias{computeIC}
 \title{Calculate IC values for a data matrix (genes-by-cells)}
 \usage{
-computeIC(data)
+computeIC(data, p.val = 0.01)
 }
 \arguments{
 \item{data}{Data matrix}
+
+\item{p.val}{The p-value cutoff for correlation values to use in calculations}
 }
 \value{
 The IC value
