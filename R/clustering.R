@@ -40,8 +40,8 @@ calcSOM <- function(data, train = NULL, weights = NULL, num_epochs = 200, resolu
 
     if (!parallel) {
       maxr <- min(0.5 * init$h, init$w)
-      test.som <- kohonen::som(data = data.train, grid = class::somgrid(init$w, init$h, "hexagonal"), rlen = num_epochs,
-                               radius = c(maxr, 1), init = init$initgrid, toroidal = F)
+      test.som <- kohonen::som(X = data.train, grid = kohonen::somgrid(init$w, init$h, "hexagonal", toroidal = F), rlen = num_epochs,
+                               radius = c(maxr, 1), init = init$initgrid)
       par(mfrow = c(2, 2))
       plot(test.som, type = "changes", main = "t")
       plot(test.som, type = "count")
