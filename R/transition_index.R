@@ -32,13 +32,13 @@ boot.ic <- function(data, groups, n = 20, R = 999, ...) {
     groups <- factor(groups)
   }
 
-  b.ic <- lapply(levels(group), function(g) {
-    d <- data[, group == g]
+  b.ic <- lapply(levels(groups), function(g) {
+    d <- data[, groups == g]
     boot::boot(d, computeIC, sim="parametric", R=R, ran.gen = boot_subsample, mle=n, ...)
   })
 
   ic_values <- sapply(b.ic, function(l) l$t)
-  colnames(ic_values) <- levels(group)
+  colnames(ic_values) <- levels(groups)
   return(ic_values)
 }
 
