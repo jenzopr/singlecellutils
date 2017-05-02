@@ -4,9 +4,9 @@
 \alias{heterogeneity}
 \title{Calculates various heterogeneity statistics}
 \usage{
-heterogeneity(data, statistic = c("cv", "dropout", "gini", "inequality"),
-  normalization = c("none", "bins", "windows"),
-  order_by = log2(rowMeans(data/10, na.rm = T) + 1), ...)
+heterogeneity(data, statistic = c("cv", "dropout", "gini", "inequality",
+  "bwt", "mean"), normalization = c("none", "bins", "windows"),
+  order_by = log2(rowMeans(data/10, na.rm = T) + 1), groups = NULL, ...)
 }
 \arguments{
 \item{data}{A numerical matrix}
@@ -16,6 +16,8 @@ heterogeneity(data, statistic = c("cv", "dropout", "gini", "inequality"),
 \item{normalization}{The normalization method. Can be \code{none} for no normalization, \code{bins} to normalize in bins calculated from the mean or \code{windows} to normalize within rolling windows.}
 
 \item{order_by}{A numeric vector by which the calculated statistic should be ordered in case of normalization.}
+
+\item{groups}{An optional grouping factor.}
 
 \item{...}{Additional arguments passed to the normalization functions.}
 }

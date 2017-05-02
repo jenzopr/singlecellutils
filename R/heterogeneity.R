@@ -56,7 +56,7 @@ inequality.fun <- function(x) {
 #'
 #' @param x The numeric vector of values
 #' @param g The grouping factor
-#' @return
+#' @return The inequality measure for x given g
 #' @export
 bw.inequality.fun <- function(x, g) {
   sum(theils.between(x, g)) / sum(theils.within(x, g))
@@ -68,6 +68,7 @@ bw.inequality.fun <- function(x, g) {
 #' @param statistic The heterogeneity measure to calculate. Can be \code{cv} for the coefficient of variation, \code{dropout} for the percentage of dropouts, \code{gini} for the gini index or \code{inequality} for Theil's T statistic.
 #' @param normalization The normalization method. Can be \code{none} for no normalization, \code{bins} to normalize in bins calculated from the mean or \code{windows} to normalize within rolling windows.
 #' @param order_by A numeric vector by which the calculated statistic should be ordered in case of normalization.
+#' @param groups An optional grouping factor.
 #' @param ... Additional arguments passed to the normalization functions.
 #'
 #' @return The statistics value for each observation.
