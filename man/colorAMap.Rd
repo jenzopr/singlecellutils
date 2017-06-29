@@ -5,24 +5,24 @@
 \title{A function to color observations on a map based on values of a vector.}
 \usage{
 colorAMap(data, values, palette = RColorBrewer::brewer.pal(8, "Dark2"),
-  title = NULL, outlier.col = "darkgrey", xlab = "Dimension 1",
+  title = NULL, na.col = "darkgrey", xlab = "Dimension 1",
   ylab = "Dimension 2", ...)
 }
 \arguments{
 \item{data}{The data matrix with observation coordinates in the first two columns.}
 
-\item{values}{A numerical vector on which the coloring is based, or a numeric or character of length 1 indicating the column of the data matrix from which to take the values.}
+\item{values}{Either a numerical vector on which the coloring is based, or a numeric or character of length 1 indicating the column of the data matrix from which to take the values, or a factor.}
 
-\item{palette}{The color palette}
+\item{palette}{The color palette.}
 
-\item{title}{The name of the data, shown in plot.main}
+\item{title}{The name of the data, shown in plot.main.}
 
-\item{outlier.col}{The color of outlier points (\code{NA} in \code{values})}
+\item{na.col}{The color of \code{NA}s in \code{values}.}
 
 \item{...}{Other parameters passed to lattice::xyplot}
 }
 \value{
-A lattice xyplot.
+A lattice xyplot. In case \code{values} is a factor, a legend is drawn.
 }
 \description{
 A function to color observations on a map based on values of a vector.

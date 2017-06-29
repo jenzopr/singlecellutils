@@ -36,16 +36,16 @@ vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T, medoids =
 #' A function to color observations on a map based on values of a vector.
 #'
 #' @param data The data matrix with observation coordinates in the first two columns.
-#' @param values A numerical vector on which the coloring is based, or a numeric or character of length 1 indicating the column of the data matrix from which to take the values.
-#' @param palette The color palette
-#' @param title The name of the data, shown in plot.main
-#' @param outlier.col The color of outlier points (\code{NA} in \code{values})
+#' @param values Either a numerical vector on which the coloring is based, or a numeric or character of length 1 indicating the column of the data matrix from which to take the values, or a factor.
+#' @param palette The color palette.
+#' @param title The name of the data, shown in plot.main.
+#' @param na.col The color of \code{NA}s in \code{values}.
 #' @param ... Other parameters passed to lattice::xyplot
 #'
-#' @return A lattice xyplot.
+#' @return A lattice xyplot. In case \code{values} is a factor, a legend is drawn.
 #'
 #' @export
-colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(8, "Dark2"), title = NULL, outlier.col = "darkgrey", xlab = "Dimension 1", ylab = "Dimension 2", ...) {
+colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(8, "Dark2"), title = NULL, na.col = "darkgrey", xlab = "Dimension 1", ylab = "Dimension 2", ...) {
   if (length(values) != nrow(data) & length(values) > 1) {
     stop("Values are not of same length as data and more than one value given")
   }
@@ -56,19 +56,35 @@ colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(8, "Dark2
   }
 
   if (length(values) == 1 & ncol(data) <= length(values)) {
-    values <- as.numeric(data[, values])
+    v <- as.numeric(data[, values])
+  }
+
+  if (is.factor(values)) {
+    levels <- levels(values)
+    v <- as.numeric(values)
+  } else {
+    v <- as.numeric(values)
   }
 
   if (length(unique(values)) <= length(palette)) {
     warning("Less unique data values than colors in palette.. reducing palette.")
+    palette <- palette[1:length(unique(na.omit(values)))]
   }
-  color <- palette[as.numeric(cut(values, breaks = length(palette)))]
+  color <- palette[as.numeric(cut(v, breaks = length(palette)))]
 
   if (any(is.na(values))) {
-    color[is.na(values)] = outlier.col
+    color[is.na(values)] = na.col
   }
 
-  p <- lattice::xyplot(data[, 2] ~ data[, 1], xlab = xlab, ylab = ylab, main = main, col = color, ...)
+  # Construct legend key in case of factor
+  if (is.factor(values)) {
+    legend.key <- list(corner=c(1,1),
+                       points=list(col=palette[1:length(levels)], pch=16),
+                       text=list(levels))
+  } else {
+    legend.key <- NULL
+  }
+  p <- lattice::xyplot(data[, 2] ~ data[, 1], xlab = xlab, ylab = ylab, main = main, col = color, key = legend.key, ...)
   return(p)
 }
 
