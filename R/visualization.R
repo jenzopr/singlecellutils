@@ -36,17 +36,20 @@ vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T, medoids =
 #' A function to color observations on a map based on values of a vector.
 #'
 #' @param data The data matrix with observation coordinates in the first two columns.
-#' @param values Either a numerical vector on which the coloring is based, or a numeric or character of length 1 indicating the column of the data matrix from which to take the values, or a factor.
+#' @param colour_by Either a numerical vector on which the coloring is based, or a numeric or character of length 1 indicating the column of the data matrix from which to take the values, or a factor.
+#' @param shape_by An optional factor on which point shape is based.
 #' @param palette The color palette.
 #' @param title The name of the data, shown in plot.main.
 #' @param na.col The color of \code{NA}s in \code{values}.
+#' @param xlab,ylab Labels of x and y axis.
+#' @param pch Default point shape.
 #' @param ... Other parameters passed to lattice::xyplot
 #'
-#' @return A lattice xyplot. In case \code{values} is a factor, a legend is drawn.
+#' @return A lattice xyplot. In case \code{colour_by} or \code{shape_by} is a factor, a legend is drawn.
 #'
 #' @export
-colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(8, "Dark2"), title = NULL, na.col = "darkgrey", xlab = "Dimension 1", ylab = "Dimension 2", ...) {
-  if (length(values) != nrow(data) & length(values) > 1) {
+colorAMap <- function(data, colour_by, shape_by = NULL, palette = RColorBrewer::brewer.pal(8, "Dark2"), title = NULL, na.col = "darkgrey", xlab = "Dimension 1", ylab = "Dimension 2", pch = 16, ...) {
+  if (length(colour_by) != nrow(data) & length(colour_by) > 1) {
     stop("Values are not of same length as data and more than one value given")
   }
   if (!is.null(title)) {
@@ -55,36 +58,62 @@ colorAMap <- function(data, values, palette = RColorBrewer::brewer.pal(8, "Dark2
     main <- ""
   }
 
-  if (length(values) == 1 & ncol(data) <= length(values)) {
-    v <- as.numeric(data[, values])
+  if (length(colour_by) == 1 & ncol(data) <= length(colour_by)) {
+    v <- as.numeric(data[, colour_by])
   }
 
-  if (is.factor(values)) {
-    levels <- levels(values)
-    v <- as.numeric(values)
+  if (is.factor(colour_by)) {
+    levels <- levels(colour_by)
+    v <- as.numeric(colour_by)
   } else {
-    v <- as.numeric(values)
+    v <- as.numeric(colour_by)
   }
 
-  if (length(unique(values)) <= length(palette)) {
+  if (is.factor(shape_by)) {
+    symbols <- c(16, 15, 17, 18, 19, 0:14)
+    pch <- symbols[as.numeric(shape_by)]
+    legend.pch <- symbols[as.numeric(levels(shape_by))]
+  } else {
+    if (is.null(pch)) {
+      pch <- 16
+    }
+    legend.pch <- pch
+  }
+
+  if (length(unique(colour_by)) <= length(palette)) {
     warning("Less unique data values than colors in palette.. reducing palette.")
-    palette <- palette[1:length(unique(na.omit(values)))]
+    palette <- palette[1:length(unique(na.omit(colour_by)))]
   }
   color <- palette[as.numeric(cut(v, breaks = length(palette)))]
 
-  if (any(is.na(values))) {
-    color[is.na(values)] = na.col
+  if (any(is.na(colour_by))) {
+    color[is.na(colour_by)] = na.col
   }
 
+  #
   # Construct legend key in case of factor
-  if (is.factor(values)) {
-    legend.key <- list(corner=c(1,1),
-                       points=list(col=palette[1:length(levels)], pch=16),
-                       text=list(levels))
-  } else {
+  #
+  color.key <- NULL
+  shape.key <- NULL
+  legend.key <- list(corner=c(1,1), rep = FALSE)
+
+  if (is.factor(shape_by)) {
+    shape.key <- list(points = list(col = "darkgrey", pch = legend.pch),
+                      text = list(levels(shape_by)))
+    legend.key <- c(legend.key, shape.key)
+  }
+  if (is.factor(colour_by)) {
+    color.key <- list(points = list(col = palette[1:length(levels)], pch = 16),
+                      text = list(levels))
+    legend.key <- c(legend.key, color.key)
+  }
+
+  # If legend is only of length 2 (nothing added), set to NULL
+  if (length(legend.key) == 2) {
     legend.key <- NULL
   }
-  p <- lattice::xyplot(data[, 2] ~ data[, 1], xlab = xlab, ylab = ylab, main = main, col = color, key = legend.key, ...)
+
+  p <- lattice::xyplot(data[, 2] ~ data[, 1], xlab = xlab, ylab = ylab, main = main, col = color, key = legend.key, pch = pch, ...)
   return(p)
 }
 

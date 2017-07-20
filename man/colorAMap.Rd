@@ -4,14 +4,17 @@
 \alias{colorAMap}
 \title{A function to color observations on a map based on values of a vector.}
 \usage{
-colorAMap(data, values, palette = RColorBrewer::brewer.pal(8, "Dark2"),
-  title = NULL, na.col = "darkgrey", xlab = "Dimension 1",
-  ylab = "Dimension 2", ...)
+colorAMap(data, colour_by, shape_by = NULL,
+  palette = RColorBrewer::brewer.pal(8, "Dark2"), title = NULL,
+  na.col = "darkgrey", xlab = "Dimension 1", ylab = "Dimension 2",
+  pch = 16, ...)
 }
 \arguments{
 \item{data}{The data matrix with observation coordinates in the first two columns.}
 
-\item{values}{Either a numerical vector on which the coloring is based, or a numeric or character of length 1 indicating the column of the data matrix from which to take the values, or a factor.}
+\item{colour_by}{Either a numerical vector on which the coloring is based, or a numeric or character of length 1 indicating the column of the data matrix from which to take the values, or a factor.}
+
+\item{shape_by}{An optional factor on which point shape is based.}
 
 \item{palette}{The color palette.}
 
@@ -19,10 +22,14 @@ colorAMap(data, values, palette = RColorBrewer::brewer.pal(8, "Dark2"),
 
 \item{na.col}{The color of \code{NA}s in \code{values}.}
 
+\item{xlab, ylab}{Labels of x and y axis.}
+
+\item{pch}{Default point shape.}
+
 \item{...}{Other parameters passed to lattice::xyplot}
 }
 \value{
-A lattice xyplot. In case \code{values} is a factor, a legend is drawn.
+A lattice xyplot. In case \code{colour_by} or \code{shape_by} is a factor, a legend is drawn.
 }
 \description{
 A function to color observations on a map based on values of a vector.
