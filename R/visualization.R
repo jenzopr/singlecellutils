@@ -177,11 +177,12 @@ visMarkerBar <- function(data, marker, decreasing = TRUE, cell.names = NULL, cel
 #' @param what A keyword for what to plot.
 #' @param aggregate.FUN A function to use for aggregation of codes.
 #' @param scale Which scaling should be applied.
+#' @param palette The colour palette used for scaling. If NULL, will be chosen automatically.
 #'
-#' @return The matrix of color codes (invisible)
+#' @return A ggplot2 object or a list of ggplot2 objects, in case of multiple maps.
 #'
 #' @export
-visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "aggregate", "overexpression", "underexpression"), aggregate.FUN = mean, scale = c("none", "minmax", "zscore")) {
+visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "aggregate", "overexpression", "underexpression"), aggregate.FUN = mean, scale = c("none", "minmax", "zscore"), palette = NULL) {
   if (!is(som, "kohonen")) {
     stop("Supplied object som is not of class kohonen.")
   }
@@ -206,53 +207,29 @@ visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "a
                  aggregate = as.matrix(apply(som$codes[, codes], 1, aggregate.FUN)),
                  overexpression = as.matrix(apply(apply(som$codes[, codes], 2, function(x) ifelse(x > quantile(x, probs = 0.98), x, NA)), 1, mean, na.rm=T)),
                  underexpression = as.matrix(apply(apply(som$codes[, codes], 2, function(x) ifelse(x < quantile(x, probs = 0.02), x, NA)), 1, mean, na.rm=T)))
+
+  if (is.null(palette)) {
+    palette <- switch(scaling,
+                      minmax = viridis::magma(99),
+                      zscore = grDevices::colorRampPalette(rev(RColorBrewer::brewer.pal(10, "RdBu")))(99),
+                      viridis::viridis(99))
+  }
   num_maps <- ncol(data)
-  rows <- som$grid$ydim
-  cols <- som$grid$xdim
+  grid <- as.data.frame(som$grid$pts)
+  hexgrid <- hexcoords2(grid$x, grid$y, width = 1)
 
-  par(mar = c(1, 1, 3, 1))
-  palette <- rev(colorRampPalette(RColorBrewer::brewer.pal(9, "Spectral"))(99))
-
-  cutpoints <- seq(min(som$codes[, codes], na.rm=T), max(som$codes[, codes], na.rm=T), length.out = 99)
-  colors <- apply(data, 2, function(x) {
-    c <- cut(x, breaks = cutpoints, labels = FALSE)
-    ifelse(is.na(c), "#FFFFFF", palette[c])
+  res <- apply(data, 2, function(d) {
+    df <- data.frame(hexgrid, value = rep(d, each = 6))
+    p <- ggplot2::ggplot(df, aes(x = x, y = y, group = group, fill = value)) +
+      ggplot2::geom_polygon() +
+      ggplot2::scale_fill_gradientn(colours = palette) +
+      ggplot2::coord_fixed(ratio = 1)
   })
-
-  if (num_maps > 1) {
-    par(mfrow = c(3, 3))
+  if (length(res) == 1) {
+    return(res[[1]])
+  } else {
+    return(res)
   }
-  for (i in 1:num_maps) {
-    shift <- 0.5
-    plot(0, 0, type = "n", axes = FALSE, xlim = c(0, cols), ylim = c(0, rows), xlab = "", ylab = "", asp = 1, main = titles[i])
-    for (row in 0:(rows - 1)) {
-      for (col in 1:cols)
-        Hexagon(col + shift, row, col = colors[row * cols + col, i])
-      shift <- ifelse(shift, 0, 0.5)
-    }
-  }
-
-  par(mfrow = c(1, 1))
-  return(invisible(colors))
-}
-
-#' Creates a polygon
-#'
-#' @param x The polygons x
-#' @param y The polygons y
-#' @param unitcell Scaling
-#' @param col The color of the polygon
-#'
-#' @return A colored polygon
-Hexagon <- function (x, y, unitcell = 1, col = col) {
-  polygon(c(x, x, x + unitcell / 2, x + unitcell, x + unitcell,
-            x + unitcell / 2), c(y + unitcell * 0.125,
-                               y + unitcell * 0.875,
-                               y + unitcell * 1.125,
-                               y + unitcell * 0.875,
-                               y + unitcell * 0.125,
-                               y - unitcell * 0.125),
-          col = col, border = NA)
 }
 
 #' Calculates corners from a hexagon center.

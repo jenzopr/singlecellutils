@@ -6,7 +6,7 @@
 \usage{
 visSOM(som, codes = NULL, titles = NULL, what = c("code", "population",
   "aggregate", "overexpression", "underexpression"), aggregate.FUN = mean,
-  scale = c("none", "minmax", "zscore"))
+  scale = c("none", "minmax", "zscore"), palette = NULL)
 }
 \arguments{
 \item{som}{The self-organizing map object.}
@@ -19,10 +19,12 @@ visSOM(som, codes = NULL, titles = NULL, what = c("code", "population",
 
 \item{scale}{Which scaling should be applied.}
 
+\item{palette}{The colour palette used for scaling. If NULL, will be chosen automatically.}
+
 \item{code}{The codes that should be displayed.}
 }
 \value{
-The matrix of color codes (invisible)
+A ggplot2 object or a list of ggplot2 objects, in case of multiple maps.
 }
 \description{
 Visualizes SOM components
