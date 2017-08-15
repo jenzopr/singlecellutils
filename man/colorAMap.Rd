@@ -5,9 +5,9 @@
 \title{A function to color observations on a map based on values of a vector.}
 \usage{
 colorAMap(data, colour_by, shape_by = NULL,
-  palette = RColorBrewer::brewer.pal(8, "Dark2"), title = NULL,
-  na.col = "darkgrey", xlab = "Dimension 1", ylab = "Dimension 2",
-  pch = 16, ...)
+  palette = RColorBrewer::brewer.pal(8, "Dark2"), na.colour = "darkgrey",
+  na.shape = 4, na.cex = 1, xlab = "Dimension 1", ylab = "Dimension 2",
+  pch = rep(16, nrow(data)), cex = rep(1, nrow(data)), ...)
 }
 \arguments{
 \item{data}{The data matrix with observation coordinates in the first two columns.}
@@ -18,13 +18,17 @@ colorAMap(data, colour_by, shape_by = NULL,
 
 \item{palette}{The color palette.}
 
-\item{title}{The name of the data, shown in plot.main.}
+\item{na.colour}{The color of \code{NA}s in \code{colour_by}.}
 
-\item{na.col}{The color of \code{NA}s in \code{values}.}
+\item{na.shape}{The shape of \code{NA}s in \code{shape_by}}
+
+\item{na.cex}{The cex of \code{NA} observations.}
 
 \item{xlab, ylab}{Labels of x and y axis.}
 
 \item{pch}{Default point shape.}
+
+\item{cex}{Default point size.}
 
 \item{...}{Other parameters passed to lattice::xyplot}
 }

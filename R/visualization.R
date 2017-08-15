@@ -39,23 +39,20 @@ vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T, medoids =
 #' @param colour_by Either a numerical vector on which the coloring is based, or a numeric or character of length 1 indicating the column of the data matrix from which to take the values, or a factor.
 #' @param shape_by An optional factor on which point shape is based.
 #' @param palette The color palette.
-#' @param title The name of the data, shown in plot.main.
-#' @param na.col The color of \code{NA}s in \code{values}.
+#' @param na.colour The color of \code{NA}s in \code{colour_by}.
+#' @param na.shape The shape of \code{NA}s in \code{shape_by}
+#' @param na.cex The cex of \code{NA} observations.
 #' @param xlab,ylab Labels of x and y axis.
 #' @param pch Default point shape.
+#' @param cex Default point size.
 #' @param ... Other parameters passed to lattice::xyplot
 #'
 #' @return A lattice xyplot. In case \code{colour_by} or \code{shape_by} is a factor, a legend is drawn.
 #'
 #' @export
-colorAMap <- function(data, colour_by, shape_by = NULL, palette = RColorBrewer::brewer.pal(8, "Dark2"), title = NULL, na.col = "darkgrey", xlab = "Dimension 1", ylab = "Dimension 2", pch = 16, ...) {
+colorAMap <- function(data, colour_by, shape_by = NULL, palette = RColorBrewer::brewer.pal(8, "Dark2"), na.colour = "darkgrey", na.shape = 4, na.cex = 1, xlab = "Dimension 1", ylab = "Dimension 2", pch = rep(16, nrow(data)), cex = rep(1, nrow(data)), ...) {
   if (length(colour_by) != nrow(data) & length(colour_by) > 1) {
     stop("Values are not of same length as data and more than one value given")
-  }
-  if (!is.null(title)) {
-    main <- title
-  } else {
-    main <- ""
   }
 
   if (length(colour_by) == 1 & ncol(data) <= length(colour_by)) {
@@ -75,19 +72,28 @@ colorAMap <- function(data, colour_by, shape_by = NULL, palette = RColorBrewer::
     legend.pch <- symbols[as.numeric(levels(shape_by))]
   } else {
     if (is.null(pch)) {
-      pch <- 16
+      pch <- rep(16, length(v))
     }
     legend.pch <- pch
   }
 
-  if (length(unique(colour_by)) <= length(palette)) {
+  if (is.factor(colour_by) & length(unique(colour_by)) <= length(palette)) {
     warning("Less unique data values than colors in palette.. reducing palette.")
     palette <- palette[1:length(unique(na.omit(colour_by)))]
   }
   color <- palette[as.numeric(cut(v, breaks = length(palette)))]
 
+  if (is.null(cex) | length(cex) != length(v)) {
+    cex <- rep(1, length(v))
+  }
+
   if (any(is.na(colour_by))) {
-    color[is.na(colour_by)] = na.col
+    color[is.na(colour_by)] <- na.colour
+    pch[is.na(colour_by)] <- na.shape
+    cex[is.na(colour_by)] <- na.cex
+  }
+  if (any(is.na(pch))) {
+    pch[is.na(pch)] <- na.shape
   }
 
   #
@@ -113,7 +119,7 @@ colorAMap <- function(data, colour_by, shape_by = NULL, palette = RColorBrewer::
     legend.key <- NULL
   }
 
-  p <- lattice::xyplot(data[, 2] ~ data[, 1], xlab = xlab, ylab = ylab, main = main, col = color, key = legend.key, pch = pch, ...)
+  p <- lattice::xyplot(data[, 2] ~ data[, 1], xlab = xlab, ylab = ylab, col = color, key = legend.key, pch = pch, cex = cex, ...)
   return(p)
 }
 
@@ -247,6 +253,45 @@ Hexagon <- function (x, y, unitcell = 1, col = col) {
                                y + unitcell * 0.125,
                                y - unitcell * 0.125),
           col = col, border = NA)
+}
+
+#' Calculates corners from a hexagon center.
+#'
+#' @param x The hexagon centers x coordinate
+#' @param y The hexagon centers y coordinate
+#' @param size The size of the hexagon as height/2.
+#'
+#' @return A dataframe with x and y coordinates.
+hex_corner <- function(x, y, size) {
+  angle_deg <- 60 * 0:5 + 30
+  angle_rad <- pi / 180 * angle_deg
+  data.frame(x = x + size * cos(angle_rad),
+             y = y + size * sin(angle_rad))
+}
+
+#' Calculates hexagon coordinates from hexagon centers.
+#'
+#' @param x The x coordinates of the centers
+#' @param y The y coordinates of the centers
+#' @param height The hexagons height. Precedes width if given.
+#' @param width The hexagons width. Will be calculated from height by default.
+#'
+#' @return A dataframe with the hexagons x and y coordinates, as well a group variable indicating individual hexagons.
+#'
+#' @export
+hexcoords2 <- function(x, y, height = NULL, width = sqrt(3) / 2 * height) {
+  if (is.null(height) & is.null(width)) {
+    stop("height and width can not be NULL at the same time.")
+  }
+  if (is.null(height)) height <- width * (2 / sqrt(3))
+  size <- height / 2
+
+  X <- grDevices::xy.coords(x, y)
+  x <- cbind(X$x, X$y)
+  res_l <- apply(x, 1, function(d, s) hex_corner(d[1], d[2], size = s), s = size)
+  res <- do.call("rbind", res_l)
+  res$group <- rep(1:nrow(x), each = 6)
+  res
 }
 
 #' Creates a violin plot for selected genes
