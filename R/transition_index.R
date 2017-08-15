@@ -35,7 +35,7 @@ boot.ic <- function(data, groups, n = 20, R = 999, ...) {
 
   b.ic <- lapply(levels(groups), function(g) {
     d <- data[, groups == g]
-    boot::boot(d, function(x) computeIC(x)$ic, sim="parametric", R=R, ran.gen = boot_subsample, mle=n, ...)
+    boot::boot(d, function(x, p.val) computeIC(x, p.val)$ic, sim="parametric", R=R, ran.gen = boot_subsample, mle=n, ...)
   })
 
   ic_values <- sapply(b.ic, function(l) l$t)
