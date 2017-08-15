@@ -3,7 +3,7 @@
 #' @param data Data matrix
 #' @param p.val The p-value cutoff for correlation values to use in calculations
 #'
-#' @return The IC value
+#' @return A list with the IC value (ic), as well as the used correlation values (within (GxG) / between (CxC))
 #' @export
 computeIC <- function(data, p.val = 0.01) {
   d <- data
@@ -16,7 +16,7 @@ computeIC <- function(data, p.val = 0.01) {
   use <- (r$P < p.val & !is.na(r$P) & upper.tri(r$r))
   between <- as.vector(r$r[use])
 
-  mean(within) / mean(between)
+  list(ic = mean(within) / mean(between), within = within, between = between)
 }
 
 #' Run non-parametric bootstrapping for IC values and groups
@@ -35,7 +35,7 @@ boot.ic <- function(data, groups, n = 20, R = 999, ...) {
 
   b.ic <- lapply(levels(groups), function(g) {
     d <- data[, groups == g]
-    boot::boot(d, computeIC, sim="parametric", R=R, ran.gen = boot_subsample, mle=n, ...)
+    boot::boot(d, function(x) computeIC(x)$ic, sim="parametric", R=R, ran.gen = boot_subsample, mle=n, ...)
   })
 
   ic_values <- sapply(b.ic, function(l) l$t)

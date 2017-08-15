@@ -12,7 +12,7 @@ computeIC(data, p.val = 0.01)
 \item{p.val}{The p-value cutoff for correlation values to use in calculations}
 }
 \value{
-The IC value
+A list with the IC value (ic), as well as the used correlation values (within (GxG) / between (CxC))
 }
 \description{
 Calculate IC values for a data matrix (genes-by-cells)
