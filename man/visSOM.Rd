@@ -6,7 +6,8 @@
 \usage{
 visSOM(som, codes = NULL, titles = NULL, what = c("code", "population",
   "aggregate", "overexpression", "underexpression"), aggregate.FUN = mean,
-  scale = c("none", "minmax", "zscore"), palette = NULL)
+  scale = c("none", "minmax", "zscore"), palette = NULL,
+  omit.title = FALSE, omit.fill = FALSE, coords.fix = TRUE)
 }
 \arguments{
 \item{som}{The self-organizing map object.}
@@ -20,6 +21,12 @@ visSOM(som, codes = NULL, titles = NULL, what = c("code", "population",
 \item{scale}{Which scaling should be applied.}
 
 \item{palette}{The colour palette used for scaling. If NULL, will be chosen automatically.}
+
+\item{omit.title}{Whether the title should be omitted during plot.}
+
+\item{omit.fill}{Whether the colour fill should be omitted during plot.}
+
+\item{coords.fix}{Whether ratio of coordinates should be fixed to 1.}
 
 \item{code}{The codes that should be displayed.}
 }

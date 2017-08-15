@@ -178,11 +178,14 @@ visMarkerBar <- function(data, marker, decreasing = TRUE, cell.names = NULL, cel
 #' @param aggregate.FUN A function to use for aggregation of codes.
 #' @param scale Which scaling should be applied.
 #' @param palette The colour palette used for scaling. If NULL, will be chosen automatically.
+#' @param omit.title Whether the title should be omitted during plot.
+#' @param omit.fill Whether the colour fill should be omitted during plot.
+#' @param coords.fix Whether ratio of coordinates should be fixed to 1.
 #'
 #' @return A ggplot2 object or a list of ggplot2 objects, in case of multiple maps.
 #'
 #' @export
-visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "aggregate", "overexpression", "underexpression"), aggregate.FUN = mean, scale = c("none", "minmax", "zscore"), palette = NULL) {
+visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "aggregate", "overexpression", "underexpression"), aggregate.FUN = mean, scale = c("none", "minmax", "zscore"), palette = NULL, omit.title = FALSE, omit.fill = FALSE, coords.fix = TRUE) {
   if (!is(som, "kohonen")) {
     stop("Supplied object som is not of class kohonen.")
   }
@@ -218,12 +221,15 @@ visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "a
   grid <- as.data.frame(som$grid$pts)
   hexgrid <- hexcoords2(grid$x, grid$y, width = 1)
 
-  res <- apply(data, 2, function(d) {
-    df <- data.frame(hexgrid, value = rep(d, each = 6))
+  res <- lapply(1:ncol(data), function(i) {
+    df <- data.frame(hexgrid, value = rep(data[, i], each = 6))
     p <- ggplot2::ggplot(df, aes(x = x, y = y, group = group, fill = value)) +
-      ggplot2::geom_polygon() +
-      ggplot2::scale_fill_gradientn(colours = palette) +
-      ggplot2::coord_fixed(ratio = 1)
+      ggplot2::geom_polygon()
+
+    if (!omit.fill) p <- p + ggplot2::scale_fill_gradientn(colours = palette)
+    if (coords.fix) p <- p + ggplot2::coord_fixed(ratio = 1)
+    if (!omit.title) p <- p + ggtitle(titles[i])
+    return(p)
   })
   if (length(res) == 1) {
     return(res[[1]])
