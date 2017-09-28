@@ -23,11 +23,11 @@ Imports:
     quadprog,
     viridis,
     lsr,
-    rPython,
     Rsomoclu,
     boot,
     lattice,
     Hmisc
 RoxygenNote: 6.0.1
 Suggests: genefilter,
+    rPython,
     lintr

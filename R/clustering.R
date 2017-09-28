@@ -347,6 +347,9 @@ L2norm <- function(x) {
 #'
 #' @export
 hdbscan <- function(data, min.cluster.size = 5, min.samples = NULL, kwargs = NULL, return.data = T) {
+  if(!requireNamespace("rPython")) {
+    stop("To use HDBSCAN, please install rPython.")
+  }
   data <- as.matrix(data)
 
   if (nrow(data) < min.cluster.size) {
