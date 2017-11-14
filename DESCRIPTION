@@ -26,7 +26,10 @@ Imports:
     Rsomoclu,
     boot,
     lattice,
-    Hmisc
+    Hmisc,
+    biomaRt,
+    dplyr,
+    scater
 RoxygenNote: 6.0.1
 Suggests: genefilter,
     rPython,
