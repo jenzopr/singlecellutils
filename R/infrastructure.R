@@ -25,11 +25,17 @@ createSingleCellExperiment <- function(data.files, metadata.files = NULL, cell.i
     identifier <- rownames(expression[[1]])
     bm <- biomaRt::getBM(biomart.fields, filters = biomart.filter, values = identifier, mart = biomaRt::useMart("ensembl", dataset = biomart.dataset))
     m <- match(identifier, bm[, biomart.filter])
+
     data <- data.frame(bm[na.omit(m), ])
     rownames(data) <- data[, biomart.filter]
     colnames(data) <- biomart.fields
 
     rowData <- data[,c(2:ncol(data))]
+
+    if (nrow(rowData) != nrow(expression[[1]])) {
+      warning(paste("Could not annotate all", gene.identifier, "using biomaRt. Omitting unannotated genes."))
+      expression <- lapply(expression, function(l) l[which(!is.na(m)), ])
+    }
   } else {
     rowData <- NULL
   }
@@ -41,15 +47,21 @@ createSingleCellExperiment <- function(data.files, metadata.files = NULL, cell.i
     metadata_ <- lapply(metadata.files, function(p) metadata <- data.table::fread(input = p, sep = "\t", header = T, stringsAsFactors = T, na.strings = "NA"))
     metadata <- Reduce(function(a, b) dplyr::left_join(a, b, by = cell.identifier), metadata_)
 
-    m <- match(colnames(expression[[1]]), make.names(metadata[, cell.identifier]))
+    m <- match(colnames(expression[[1]]), make.names(metadata[, get(cell.identifier)]))
     colData <- as.data.frame(metadata[na.omit(m), ])
     rownames(colData) <- make.names(colData[, cell.identifier])
   } else {
     colData <- NULL
   }
 
+  # Convert to matrix
+  expression <- lapply(expression, as.matrix)
+
   if (!is.null(colData) & !is.null(rowData)) {
     SingleCellExperiment::SingleCellExperiment(assays = expression, colData = colData, rowData = rowData)
+  }
+  if (is.null(colData) & is.null(rowData)) {
+    SingleCellExperiment::SingleCellExperiment(assays = expression)
   }
   if (is.null(colData)) {
     SingleCellExperiment::SingleCellExperiment(assays = expression, rowData = rowData)
