@@ -40,11 +40,19 @@ createSingleCellExperiment <- function(data.files, metadata.files = NULL, cell.i
     metadata_ <- lapply(metadata.files, function(p) metadata <- read.table(file = p, sep = "\t", header = T, stringsAsFactors = T, na.strings = "NA"))
     metadata <- Reduce(function(a, b) dplyr::left_join(a, b, by = cell.identifier), metadata_)
 
-    m <- match(colnames(expression[1]), metadata[, cell.identifier])
+    m <- match(colnames(expression[[1]]), make.names(metadata[, cell.identifier]))
     colData <- metadata[na.omit(m), ]
   } else {
     colData <- NULL
   }
 
-  scater::SingleCellExperiment(assays = expression, colData = phenoData, rowData = featureData)
+  if (!is.null(colData) & !is.null(rowData)) {
+    SingleCellExperiment::SingleCellExperiment(assays = expression, colData = colData, rowData = rowData)
+  }
+  if (is.null(colData)) {
+    SingleCellExperiment::SingleCellExperiment(assays = expression, rowData = rowData)
+  }
+  if (is.null(rowData)) {
+    SingleCellExperiment::SingleCellExperiment(assays = expression, colData = colData)
+  }
 }

@@ -29,7 +29,7 @@ Imports:
     Hmisc,
     biomaRt,
     dplyr,
-    scater
+    SingleCellExperiment
 RoxygenNote: 6.0.1
 Suggests: genefilter,
     rPython,
