@@ -3,6 +3,7 @@
 #' @param data.files A named list with file paths to tab-separated expression matrices
 #' @param metadata.files A list with file paths to tab-separated metadata matrices
 #' @param cell.identifier The column name of cell identifiers in metadata.files (e.g. Sample, Cell)
+#' @param gene.identifier The column name of gene identifieres in data.files (e.g. gene_id)
 #' @param annotate.genes Boolean, whether or not bioMart should be used to annotate genes
 #' @param biomart.dataset The dataset that is used to fetch annotations (e.g. mmusculus_gene_ensembl)
 #' @param biomart.filter The filter that is used to match annotations to genes (e.g. ensembl_gene_id, if row.names are Ensembl Gene IDs)
@@ -11,11 +12,11 @@
 #' @return A SingleCellExperiment object.
 #'
 #' @export
-createSingleCellExperiment <- function(data.files, metadata.files = NULL, cell.identifier = "Sample", annotate.genes = F, biomart.dataset = "mmusculus_gene_ensembl", biomart.filter = "ensembl_gene_id", biomart.fields = c("ensembl_gene_id","external_gene_name","gene_biotype","description")) {
+createSingleCellExperiment <- function(data.files, metadata.files = NULL, cell.identifier = "Sample", gene.identifier = "gene_id", annotate.genes = F, biomart.dataset = "mmusculus_gene_ensembl", biomart.filter = "ensembl_gene_id", biomart.fields = c("ensembl_gene_id","external_gene_name","gene_biotype","description")) {
   #
   # Read expression data
   #
-  expression <- lapply(data.files, function(p) read.table(file = p, sep = "\t", row.names = 1, header = T))
+  expression <- lapply(data.files, function(p) data.frame(data.table::fread(input = p, sep = "\t", header = T), row.names = 1))
 
   #
   # Annotate gene names
@@ -37,11 +38,12 @@ createSingleCellExperiment <- function(data.files, metadata.files = NULL, cell.i
   # Assemble metadata
   #
   if (!is.null(metadata.files)) {
-    metadata_ <- lapply(metadata.files, function(p) metadata <- read.table(file = p, sep = "\t", header = T, stringsAsFactors = T, na.strings = "NA"))
+    metadata_ <- lapply(metadata.files, function(p) metadata <- data.table::fread(input = p, sep = "\t", header = T, stringsAsFactors = T, na.strings = "NA"))
     metadata <- Reduce(function(a, b) dplyr::left_join(a, b, by = cell.identifier), metadata_)
 
-    m <- match(colnames(expression[[1]]), make.names(metadata[, cell.identifier]))
-    colData <- metadata[na.omit(m), ]
+    m <- match(colnames(expression[[1]]), make.names(metadata[, get(cell.identifier)]))
+    colData <- as.data.frame(metadata[na.omit(m), ])
+    rownames(colData) <- make.names(colData[, cell.identifier])
   } else {
     colData <- NULL
   }
