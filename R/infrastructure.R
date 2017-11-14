@@ -41,7 +41,7 @@ createSingleCellExperiment <- function(data.files, metadata.files = NULL, cell.i
     metadata_ <- lapply(metadata.files, function(p) metadata <- data.table::fread(input = p, sep = "\t", header = T, stringsAsFactors = T, na.strings = "NA"))
     metadata <- Reduce(function(a, b) dplyr::left_join(a, b, by = cell.identifier), metadata_)
 
-    m <- match(colnames(expression[[1]]), make.names(metadata[, get(cell.identifier)]))
+    m <- match(colnames(expression[[1]]), make.names(metadata[, cell.identifier]))
     colData <- as.data.frame(metadata[na.omit(m), ])
     rownames(colData) <- make.names(colData[, cell.identifier])
   } else {
