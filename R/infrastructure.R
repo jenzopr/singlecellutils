@@ -47,7 +47,7 @@ createSingleCellExperiment <- function(data.files, metadata.files = NULL, cell.i
     metadata_ <- lapply(metadata.files, function(p) metadata <- data.table::fread(input = p, sep = "\t", header = T, stringsAsFactors = T, na.strings = "NA"))
     metadata <- Reduce(function(a, b) dplyr::left_join(a, b, by = cell.identifier), metadata_)
 
-    m <- match(colnames(expression[[1]]), make.names(metadata[, get(cell.identifier)]))
+    m <- match(colnames(expression[[1]]), make.names(metadata[, get("cell.identifier")]))
     colData <- as.data.frame(metadata[na.omit(m), ])
     rownames(colData) <- make.names(colData[, cell.identifier])
   } else {
@@ -58,15 +58,15 @@ createSingleCellExperiment <- function(data.files, metadata.files = NULL, cell.i
   expression <- lapply(expression, as.matrix)
 
   if (!is.null(colData) & !is.null(rowData)) {
-    SingleCellExperiment::SingleCellExperiment(assays = expression, colData = colData, rowData = rowData)
+    return(SingleCellExperiment::SingleCellExperiment(assays = expression, colData = colData, rowData = rowData))
   }
   if (is.null(colData) & is.null(rowData)) {
-    SingleCellExperiment::SingleCellExperiment(assays = expression)
+    return(SingleCellExperiment::SingleCellExperiment(assays = expression))
   }
   if (is.null(colData)) {
-    SingleCellExperiment::SingleCellExperiment(assays = expression, rowData = rowData)
+    return(SingleCellExperiment::SingleCellExperiment(assays = expression, rowData = rowData))
   }
   if (is.null(rowData)) {
-    SingleCellExperiment::SingleCellExperiment(assays = expression, colData = colData)
+    return(SingleCellExperiment::SingleCellExperiment(assays = expression, colData = colData))
   }
 }
