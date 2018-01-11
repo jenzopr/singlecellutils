@@ -2,8 +2,7 @@ Package: singlecellutils
 Type: Package
 Title: Utility functions for single-cell data
 Version: 0.1.0
-Authors@R: person(given = "Jens", family = "Preussner", "jens.preussner@mpi-bn.mpg.de", role = c("aut", "cre"))
-Author: Jens Preussner [aut, cre]
+Authors@R: person(first = "Jens", last = "Preussner", email = "jens.preussner@mpi-bn.mpg.de", role = c("aut", "cre"))
 Maintainer: Jens Preussner <jens.preussner@mpi-bn.mpg.de>
 Description: More about what it does (maybe more than one line)
 License: MIT
