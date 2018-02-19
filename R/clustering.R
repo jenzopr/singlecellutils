@@ -329,69 +329,6 @@ L2norm <- function(x) {
   sqrt(sum(x^2))
 }
 
-#' A wrapper for running HDBSCAN in python
-#'
-#' @param data Matrix-like data to be clustered
-#' @param min.cluster.size The minimum size of clusters
-#' @param min.samples The number of samples in a neighbourhood for a point to be considered a core point.
-#' @param kwargs A named list of parameters passed to HDBSCAN
-#'
-#' @return the clustered data
-#'
-#' @export
-hdbscan <- function(data, min.cluster.size = 5, min.samples = NULL, kwargs = NULL, return.data = T) {
-  if(!requireNamespace("rPython")) {
-    stop("To use HDBSCAN, please install rPython.")
-  }
-  data <- as.matrix(data)
-
-  if (nrow(data) < min.cluster.size) {
-    stop("Less observations than min.cluster.size")
-  }
-  if ((!is.null(kwargs) && !is.list(kwargs)) || (is.list(kwargs) && is.null(names(kwargs)))) {
-    stop("kwargs should be a named list")
-  }
-
-  rPython::python.exec("import hdbscan")
-  rPython::python.exec("import numpy as np")
-
-  # Assign variables
-  rPython::python.assign("l", data)
-  rPython::python.exec("data = np.array(l)")
-  rPython::python.exec("min_samples = None")
-  rPython::python.exec("additional_arguments = dict()")
-  rPython::python.assign("min_cluster_size", min.cluster.size)
-
-  if (!is.null(min.samples)) {
-    rPython::python.assign("min_samples", min.samples)
-  }
-  if (!is.null(kwargs)) {
-    rPython::python.assign("additional_arguments", kwargs)
-  }
-
-  # Initialise clusterer
-  rPython::python.exec("cl = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size, min_samples=min_samples, **additional_arguments)")
-
-  # Cluster data
-  rPython::python.exec("labels = cl.fit_predict(data).tolist()")
-  rPython::python.exec("prob = cl.probabilities_.tolist()")
-  rPython::python.exec("persistence = cl.cluster_persistence_.tolist()")
-  #rPython::python.exec("outlier_score = cl.outlier_scores_.tolist()")
-
-  # Get results
-  .cluster <- rPython::python.get("labels")
-  .probabilities <- rPython::python.get("prob")
-  .persistence <- rPython::python.get("persistence")
-  #.outlier.score <- rPython::python.get("outlier_score")
-
-  .cluster <- .cluster + 1
-  if (return.data) {
-    data.frame(data, .cluster = .cluster, .probabilities = .probabilities)
-  } else {
-    data.frame(.cluster = .cluster, .probabilities = .probabilities)
-  }
-}
-
 #' Calculates cluster centers based on a probability threshold.
 #'
 #' @param c The clustering
