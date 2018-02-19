@@ -374,3 +374,41 @@ colorIdentity <- function(identity, data=NULL, data.name=NULL, data.discrete=FAL
   axis(1, labels = F)
   axis(2, labels = T)
 }
+
+#' Plots a silhouette plot
+#'
+#' @param object A SinglecellExperiment object
+#' @param use_dimred A character string indicating which dimension reduction to use
+#' @param clusters A character string indicating which annotation to use as clusters
+#' @param ... Other arguments passed to other functions
+#'
+#' @return A ggplot object
+#'
+#' @export
+plotSilhouette <- function(object, use_dimred, clusters, ...) {
+  if ( !is(object, "SingleCellExperiment") ) {
+    stop("Object must be of class SingleCellExperiment")
+  }
+
+  if (!use_dimred %in% SingleCellExperiment::reducedDimNames(object)) {
+    stop(paste("Object must contain a reducedDim named", use_dimred))
+  }
+
+  if (!clusters %in% colnames(colData(object))) {
+    stop(paste("Object must contain a column", clusters, "in colData"))
+  }
+
+  if (!is.factor(colData(object)[, clusters])) {
+    cl <- factor(colData(object)[, clusters])
+  } else {
+    cl <- colData(object)[, clusters]
+  }
+
+  s <- calculateSilhouette(SingleCellExperiment::reducedDim(object, use_dimred), cl, ...)
+  o <- order(as.numeric(cl), s)
+  df <- data.frame(cell = factor(colnames(object)[o], levels = colnames(object)[o], ordered = T), silhouette = s[o], cluster = cl[o])
+
+  ggplot2::ggplot(df, ggplot2::aes(y = silhouette, x = cell, fill = cluster, colour = cluster)) +
+    ggplot2::geom_bar(stat = "identity", position = "dodge") +
+    ggplot2::coord_flip()
+}

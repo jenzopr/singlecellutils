@@ -349,3 +349,35 @@ calculateClusterCenter <- function(c, min.probability = 0.4) {
   centers
 }
 
+#' Calculates silhouette values for each row in data
+#'
+#' @param data A data matrix that can be used to calculate distances between rows
+#' @param clusters A vector indicating cluster membership
+#' @param dims_to_use Specifies which dimensions to use for calculating the distance between observations
+#' @param ... Other arguments passed to the \code{dist} function.
+#'
+#' @return A vectr of silhouette values.
+#'
+#' @details Implementation as in https://en.wikipedia.org/wiki/Silhouette_(clustering)
+calculateSilhouette <- function(data, clusters, dims_to_use = 1:2, ...) {
+  if (!nrow(data) == length(clusters)) {
+    stop("Number of data observations deviates from cluster information supplied.")
+  }
+
+  dist <- as.matrix(dist(data[, dims_to_use], ...))
+
+  u_clusters <- na.omit(unique(clusters))
+
+  silhouette <- sapply(1:nrow(data), function(i) {
+    c <- clusters[i]
+    same_c <- which(clusters == c)
+    a_i <- mean(dist[i, same_c])
+
+    b_i <- min(sapply(u_clusters[u_clusters != c], function(j) {
+      other_c <- which(clusters == j)
+      mean(dist[i, other_c])
+    }))
+
+    (b_i - a_i)/max(b_i, a_i)
+  })
+}
