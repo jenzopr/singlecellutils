@@ -10,6 +10,8 @@ calcMeansPerCondition(data, condition, log = T)
 \item{data}{Expression data matrix}
 
 \item{condition}{A factor describing different conditions}
+
+\item{log}{If the results should be returned in log scale.}
 }
 \description{
 Calculates means per condition

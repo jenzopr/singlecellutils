@@ -7,7 +7,7 @@
 inequality.fun(x)
 }
 \arguments{
-\item{c}{The numeric vector of values}
+\item{x}{The numeric vector of values}
 }
 \value{
 The inequality measure for x

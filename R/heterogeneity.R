@@ -263,6 +263,13 @@ theils.t <- function(x, winsorize = FALSE, treat.zeros = "exclude", epsilon = 0,
   1 / n * sum(te, na.rm = T)
 }
 
+
+#' Calculates the Theils index between groups.
+#'
+#' @param x A numeric vector
+#' @param groups A grouping factor.
+#'
+#' @return The Theils between.
 #' @export
 theils.between <- function(x, groups) {
   P <- length(groups)
@@ -279,6 +286,12 @@ theils.between <- function(x, groups) {
   return(T)
 }
 
+#' Calculates the Theils index within groups.
+#'
+#' @param x A numeric vector
+#' @param groups A grouping factor.
+#'
+#' @return The Theils within.
 #' @export
 theils.within <- function(x, groups) {
   ug <- unique(groups)

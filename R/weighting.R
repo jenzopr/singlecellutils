@@ -27,7 +27,7 @@ calcFNWeight <- function(data, means = NULL, nq = 30, expression_cutoff = 10, su
   # Either use all constitutively expressed genes or housekeeping genes here
   theils.t <- norm.theil.t(data, winsorize = T, treat.zeros = "eps")
   residuals <- scale(theils.t$theils.t - (exp(theils.t$i + theils.t$d * theils.t$dropin) - 1))
-  theils.pval <- pnorm(residuals, lower.tail = T)
+  theils.pval <- stats::pnorm(residuals, lower.tail = T)
   use <- names(theils.t$theils.t[which(theils.pval < 0.2)])
 
   # Calculate means that serve for binning the genes
@@ -50,7 +50,7 @@ calcFNWeight <- function(data, means = NULL, nq = 30, expression_cutoff = 10, su
 
   # Fit a GLM model per cell, capturing the relationship between detection rate and bin mean
   parameters <- t(apply(dropoutRate, 2, function(do) {
-    mod <- glm(do ~ bin_mu, family = binomial(link="logit"))
+    mod <- stats::glm(do ~ bin_mu, family = stats::binomial(link="logit"))
     coefs <- mod$coefficients
     names(coefs) <- c("Intercept", "Slope")
     coefs
@@ -61,13 +61,13 @@ calcFNWeight <- function(data, means = NULL, nq = 30, expression_cutoff = 10, su
 
   # Plot
   if (!supress.plot) {
-    opar <- par()
-    par(mfrow=c(4,4))
+    opar <- graphics::par()
+    graphics::par(mfrow=c(4,4))
     for(i in 1:m) {
-      plot(bin_mu, dropoutRate[,i], pch=16, xlab="Mean expression in bin", ylab="Dropout rate", main=colnames(data)[i])
-      lines(bin_mu, sigmoid(bin_mu, a = parameters[i,1], b = parameters[i,2]), type="l", col="red")
+      graphics::plot(bin_mu, dropoutRate[,i], pch=16, xlab="Mean expression in bin", ylab="Dropout rate", main=colnames(data)[i])
+      graphics::lines(bin_mu, sigmoid(bin_mu, a = parameters[i,1], b = parameters[i,2]), type="l", col="red")
     }
-    par(opar)
+    graphics::par(opar)
   }
 
   # Calculare priors P(detection) and P(expression)
@@ -103,6 +103,7 @@ sigmoid <- function(x, a, b) {
 #'
 #' @param data Expression data matrix
 #' @param condition A factor describing different conditions
+#' @param log If the results should be returned in log scale.
 #'
 calcMeansPerCondition <- function(data, condition, log = T) {
   condition <- as.factor(condition)

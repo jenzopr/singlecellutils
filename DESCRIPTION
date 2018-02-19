@@ -8,6 +8,7 @@ Description: More about what it does (maybe more than one line)
 License: MIT
 LazyData: TRUE
 Imports:
+    methods,
     zoo,
     lawstat,
     kohonen,
@@ -29,7 +30,9 @@ Imports:
     biomaRt,
     dplyr,
     SingleCellExperiment,
-    data.table
+    data.table,
+    graphics,
+    stats
 RoxygenNote: 6.0.1
 Suggests: genefilter,
     rPython,

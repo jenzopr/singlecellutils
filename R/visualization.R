@@ -79,7 +79,7 @@ colorAMap <- function(data, colour_by, shape_by = NULL, palette = RColorBrewer::
 
   if (is.factor(colour_by) & length(unique(colour_by)) <= length(palette)) {
     warning("Less unique data values than colors in palette.. reducing palette.")
-    palette <- palette[1:length(unique(na.omit(colour_by)))]
+    palette <- palette[1:length(unique(stats::na.omit(colour_by)))]
   }
   color <- palette[as.numeric(cut(v, breaks = length(palette)))]
 
@@ -281,6 +281,7 @@ hexcoords2 <- function(x, y, height = NULL, width = sqrt(3) / 2 * height) {
 #'
 #' @param data The expression data (as data.frame)
 #' @param gene.names A character vector of associated gene names (optional)
+#' @param group A possible grouping factor
 #'
 #' @return A ggplot2 figure.
 #'
