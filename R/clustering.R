@@ -7,12 +7,12 @@
 #' @param resolution A multiplier for the map size
 #' @param seed A random seed (default NULL).
 #' @param init A list with initialization parameters.
-#' @param parallel Indicates if the parallel implementation should be used.
+#' @param init.FUN A function to initialize the map.
 #'
 #' @return A som object.
 #'
 #' @export
-calcSOM <- function(data, train = NULL, weights = NULL, num_epochs = 200, resolution = 1, seed = NULL, init = NULL, init.FUN = map.init, parallel = F) {
+calcSOM <- function(data, train = NULL, weights = NULL, num_epochs = 200, resolution = 1, seed = NULL, init = NULL, init.FUN = map.init) {
     if (is.null(train)) {
       train <- 1:min(nrow(data), 5000)
     }
@@ -38,21 +38,16 @@ calcSOM <- function(data, train = NULL, weights = NULL, num_epochs = 200, resolu
       init <- do.call(init.FUN, list(data = data.train, resolution = resolution))
     }
 
-    if (!parallel) {
-      maxr <- min(0.5 * init$h, init$w)
-      test.som <- kohonen::som(X = data.train, grid = kohonen::somgrid(init$w, init$h, "hexagonal", toroidal = F), rlen = num_epochs,
-                               radius = c(maxr, 1), init = init$initgrid)
-      par(mfrow = c(2, 2))
-      plot(test.som, type = "changes", main = "t")
-      plot(test.som, type = "count")
-      plot(test.som, type = "dist.neighbours")
-      plot(test.som, main = "t")
-      par(mfrow = c(1, 1))
-    }
-    else {
-      psom <- Rsomoclu::Rsomoclu.train(data.train, nEpoch = num_epochs, nSomX = init$w, nSomY = init$h, codebook = init$initgrid, radius0 = round(min(init$w, init$h)/2), radiusN = 1, radiusCooling = "linear", scale0 = 1, scaleN = 0.01, scaleCooling = "linear")
-      test.som <- Rsomoclu::Rsomoclu.kohonen(data.train, psom, n.hood = "circular")
-    }
+    maxr <- min(0.5 * init$h, init$w)
+    test.som <- kohonen::som(X = data.train, grid = kohonen::somgrid(init$w, init$h, "hexagonal", toroidal = F), rlen = num_epochs,
+                             radius = c(maxr, 1), init = init$initgrid)
+    graphics::par(mfrow = c(2, 2))
+    plot(test.som, type = "changes", main = "t")
+    plot(test.som, type = "count")
+    plot(test.som, type = "dist.neighbours")
+    plot(test.som, main = "t")
+    graphics::par(mfrow = c(1, 1))
+
     return(test.som)
 }
 
@@ -126,8 +121,6 @@ map.init.local <- function(data, resolution = 1) {
 #' @param ... Additional parameters.
 #'
 #' @return A clustering of the SOM.
-#'
-#' @export
 clusterSOM <- function(som, kmax = NULL, dist.fun = median, use.codes = NULL, even.layout = T, max.rounds = max(100, nrow(som$codes)), ...) {
   if (!is(som, "kohonen")) {
     stop("Supplied object som is not of class kohonen.")

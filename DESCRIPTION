@@ -23,7 +23,6 @@ Imports:
     quadprog,
     viridis,
     lsr,
-    Rsomoclu,
     boot,
     lattice,
     Hmisc,

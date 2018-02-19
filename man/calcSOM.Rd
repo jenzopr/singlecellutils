@@ -5,8 +5,7 @@
 \title{Calculates a (weighted) self-organizing map}
 \usage{
 calcSOM(data, train = NULL, weights = NULL, num_epochs = 200,
-  resolution = 1, seed = NULL, init = NULL, init.FUN = map.init,
-  parallel = F)
+  resolution = 1, seed = NULL, init = NULL, init.FUN = map.init)
 }
 \arguments{
 \item{data}{A numerical matrix or data.frame.}
@@ -23,7 +22,7 @@ calcSOM(data, train = NULL, weights = NULL, num_epochs = 200,
 
 \item{init}{A list with initialization parameters.}
 
-\item{parallel}{Indicates if the parallel implementation should be used.}
+\item{init.FUN}{A function to initialize the map.}
 }
 \value{
 A som object.
