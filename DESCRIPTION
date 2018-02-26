@@ -31,7 +31,8 @@ Imports:
     SingleCellExperiment,
     data.table,
     graphics,
-    stats
+    stats,
+    stringr
 RoxygenNote: 6.0.1
 Suggests: genefilter,
     rPython,
