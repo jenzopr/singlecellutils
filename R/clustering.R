@@ -1,113 +1,44 @@
-#' Calculates a (weighted) self-organizing map
+#' Adds results from a particular clustering technique to the object.
 #'
-#' @param data A numerical matrix or data.frame.
-#' @param train Row indices of training data.
-#' @param weights Additonal weights per row
-#' @param num_epochs How long the training should last.
-#' @param resolution A multiplier for the map size
-#' @param seed A random seed (default NULL).
-#' @param init A list with initialization parameters.
-#' @param init.FUN A function to initialize the map.
+#' @param object A SingleCellExperiment object.
+#' @param flavor Determines which clustering technique to apply.
+#' @param column Determines the column name of the \code{colData} slot to store results to.
+#' @param ... Additional parameters passed to functions.
 #'
-#' @return A som object.
+#' @return A SingleCellExperiment object with modified \code{colData} slot.
 #'
 #' @export
-calcSOM <- function(data, train = NULL, weights = NULL, num_epochs = 200, resolution = 1, seed = NULL, init = NULL, init.FUN = map.init) {
-    if (is.null(train)) {
-      train <- 1:min(nrow(data), 5000)
-    }
-    if (num_epochs < length(train) / 25) {
-        lower_bound <- floor(length(train) / 25)
-        warning(paste(num_epochs, "epochs is low for", length(train), "training genes, it was set to",
-            lower_bound))
-        num_epochs <- lower_bound
-    }
-
-    if (!is.null(seed)) {
-        set.seed(seed)
-    }
-
-    data.train <- data[train, ]
-    data.rest <- data[-train, ]
-
-    if (is.null(weights)) {
-      weights <- matrix(1L, nrow = nrow(data.train), ncol = ncol(data.train))
-    }
-
-    if (is.null(init)) {
-      init <- do.call(init.FUN, list(data = data.train, resolution = resolution))
-    }
-
-    maxr <- min(0.5 * init$h, init$w)
-    test.som <- kohonen::som(X = data.train, grid = kohonen::somgrid(init$w, init$h, "hexagonal", toroidal = F), rlen = num_epochs,
-                             radius = c(maxr, 1), init = init$initgrid)
-    graphics::par(mfrow = c(2, 2))
-    plot(test.som, type = "changes", main = "t")
-    plot(test.som, type = "count")
-    plot(test.som, type = "dist.neighbours")
-    plot(test.som, main = "t")
-    graphics::par(mfrow = c(1, 1))
-
-    return(test.som)
+add_clustering <- function(object, flavor = c("hdbscan"), column = ".cluster", ...) {
+  clustering <- switch(flavor,
+                       hdbscan = hdbscan(object, ...))
+  object <- SingleCellExperiment::mutate(object, !!column := clustering)
+  return(object)
 }
 
-#' Initializes a SOM map with the first two PCA components in a linear fashion
+#' Conveinience function to perform HDBSCAN via reticulate.
 #'
-#' @param data The training data of the SOM
-#' @param resolution A size factor increasing or decreasing the map resolution
+#' Performs HDBSCAN clustering on a SingleCellExperiment object.
+#' The algorithm is explained in detail in http://joss.theoj.org/papers/10.21105/joss.00205 and needs the python package \code{hdbscan} installed.
 #'
-#' @return A list with initialization parameters
-map.init <- function(data, resolution = 1) {
-  units <- 5 * resolution * sqrt(nrow(data))
-  phi <- (1 + sqrt(5))/2
-  h <- round(sqrt(units/phi))
-  w <- round(h + (h/phi))
-
-  pcar <- prcomp(data)
-  initcodes <- array(0, dim = c(h, w, ncol(data)))
-  gridshape <- array(0, dim = c(h * w, ncol(data)))
-  for (x in 1:w) {
-    for (y in 1:h) {
-      initcodes[y, x, ] <- (x / w) * pcar$rotation[, 2] + (y / h) * pcar$rotation[,1]
-      gridshape[(y - 1) * w + x, ] <- initcodes[y, x, ]
-    }
-  }
-  list(h = h, w = w, initgrid = gridshape)
-}
-
-#' Initializes a SOM map with the first two PCA components in a localized fashion
+#' @param object A SingleCellExperiment object.
+#' @param use_dimred A string or integer scalar indicating the reduced dimension result in \code{reducedDims(object)} to use as input.
+#' @param min_samples Measure of how conservative the clustering should to be. The larger the value of \code{min_samples}, the more conservative the clustering – more points will be declared as noise, and clusters will be restricted to progressively more dense areas.
+#' @param min_cluster_size The smallest size grouping that is considered a cluster.
+#' @param outlier Determines how outliers are encoded in the resulting clustering.
+#' @param seed A numeric seed to initialize the random number generator.
 #'
-#' @param data The training data of the SOM
-#' @param resolution A size factor increasing or decreasing the map resolution
+#' @return A factor with the assigned cluster.
 #'
-#' @return A list with initialization parameters
-map.init.local <- function(data, resolution = 1) {
-  units <- 5 * resolution * sqrt(nrow(data))
-  phi <- (1 + sqrt(5))/2
-  h <- round(sqrt(units/phi))
-  w <- round(h + (h/phi))
+#' @export
+hdbscan <- function(object, use_dimred, min_samples = 7L, min_cluster_size = 9L, outlier = 0, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
 
-  pcar <- prcomp(data)
-  gridshape <- array(0, dim = c(h * w, ncol(data)))
+  h <- reticulate::import("hdbscan")
+  cl <- h$HDBSCAN(min_samples = min_samples, min_cluster_size = min_cluster_size)
 
-  h_pos <- as.numeric(cut(pcar$x[,1], breaks=h))
-  w_pos <- as.numeric(cut(pcar$x[,2], breaks=w))
-  cell_pos <- (h_pos - 1) * w + w_pos
-  n <- constructHexNeighborhood(h, w, even.layout = T)
-
-  h_genes <- rownames(datamat)[order(abs(pcar$rotation[,1]), decreasing = T)[1:100]]
-  w_genes <- rownames(datamat)[order(abs(pcar$rotation[,2]), decreasing = T)[1:100]]
-  genes <- unique(c(h_genes, w_genes))
-
-  for(i in 1:ncol(data)) {
-    direct <- c(cell_pos[i], n[[cell_pos[i]]])
-    second <- unique(unlist(sapply(direct, function(k) { n[[k]] })))
-    third <- unique(unlist(sapply(second, function(k) { n[[k]] })))
-    gridshape[third,i] <- sum(1/3 * data[genes, i])
-    gridshape[second,i] <- gridshape[second,i] + sum(1/2 * data[genes, i])
-    gridshape[direct,i] <- gridshape[direct,i] + sum(data[genes, i])
-  }
-  list(h = h, w = w, initgrid = scale(gridshape))
+  labels <- cl$fit_predict(SingleCellExperiment::reducedDim(object, use_dimred)) + 1
+  labels[labels == 0] <- outlier
+  return(factor(labels))
 }
 
 #' Clusters a SOM into k regions determined by k-means
@@ -347,37 +278,4 @@ calculateClusterCenter <- function(c, min.probability = 0.4) {
     }
   })
   centers
-}
-
-#' Calculates silhouette values for each row in data
-#'
-#' @param data A data matrix that can be used to calculate distances between rows
-#' @param clusters A vector indicating cluster membership
-#' @param dims_to_use Specifies which dimensions to use for calculating the distance between observations
-#' @param ... Other arguments passed to the \code{dist} function.
-#'
-#' @return A vectr of silhouette values.
-#'
-#' @details Implementation as in https://en.wikipedia.org/wiki/Silhouette_(clustering)
-calculateSilhouette <- function(data, clusters, dims_to_use = 1:2, ...) {
-  if (!nrow(data) == length(clusters)) {
-    stop("Number of data observations deviates from cluster information supplied.")
-  }
-
-  dist <- as.matrix(dist(data[, dims_to_use], ...))
-
-  u_clusters <- na.omit(unique(clusters))
-
-  silhouette <- sapply(1:nrow(data), function(i) {
-    c <- clusters[i]
-    same_c <- which(clusters == c)
-    a_i <- mean(dist[i, same_c])
-
-    b_i <- min(sapply(u_clusters[u_clusters != c], function(j) {
-      other_c <- which(clusters == j)
-      mean(dist[i, other_c])
-    }))
-
-    (b_i - a_i)/max(b_i, a_i)
-  })
 }

@@ -32,8 +32,9 @@ Imports:
     data.table,
     graphics,
     stats,
-    stringr
+    stringr,
+    reticulate,
+    SummarizedExperiment
 RoxygenNote: 6.0.1
 Suggests: genefilter,
-    rPython,
     lintr
