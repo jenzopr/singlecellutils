@@ -69,13 +69,13 @@ calcSOM <- function(object, exprs_values = 'norm_TPM', features = NULL, scale = 
   if (!is.null(features)) {
     input <- SummarizedExperiment::assay(object, i = exprs_values)[features, ]
   } else {
-    input <- assay(object, i = exprs_values)[1:min(nrow(data), 5000), ]
+    input <- SummarizedExperiment::assay(object, i = exprs_values)[1:min(nrow(input), 5000), ]
   }
   if (scale) input <- t(scale(t(input)))
 
-  if (num_epochs < length(train) / 25) {
-    lower_bound <- floor(length(train) / 25)
-    warning(paste(num_epochs, "epochs is low for", length(train), "training genes, it was set to",
+  if (num_epochs < nrow(input) / 25) {
+    lower_bound <- floor(nrow(input) / 25)
+    warning(paste(num_epochs, "epochs is low for", nrow(input), "training genes, it was set to",
                   lower_bound))
     num_epochs <- lower_bound
   }

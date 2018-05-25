@@ -30,11 +30,11 @@ compute_transition_index <- function(object, exprs_values, features = NULL, pval
   }
 
   r <- Hmisc::rcorr(t(d), type="pearson")
-  use <- (r$P < p.val & !is.na(r$P) & upper.tri(r$r))
+  use <- (r$P < pval & !is.na(r$P) & upper.tri(r$r))
   within <- as.vector(abs(r$r[use]))
 
   r <- Hmisc::rcorr(d, type="pearson")
-  use <- (r$P < p.val & !is.na(r$P) & upper.tri(r$r))
+  use <- (r$P < pval & !is.na(r$P) & upper.tri(r$r))
   between <- as.vector(r$r[use])
 
   list(ic = mean(within) / mean(between), within = within, between = between)
@@ -69,7 +69,7 @@ bootstrap_transition_index <- function(object, exprs_values, grouping, features 
   })
 
   ic_values <- sapply(b.ic, function(l) l$t)
-  colnames(ic_values) <- levels(groups)
+  colnames(ic_values) <- levels(grouping)
   return(ic_values)
 }
 

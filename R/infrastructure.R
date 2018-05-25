@@ -26,7 +26,7 @@ createSingleCellExperiment <- function(data.files, metadata.files = NULL, cell.i
     bm <- biomaRt::getBM(biomart.fields, filters = biomart.filter, values = identifier, mart = biomaRt::useMart("ensembl", dataset = biomart.dataset))
     m <- match(identifier, bm[, biomart.filter])
 
-    data <- data.frame(bm[na.omit(m), ])
+    data <- data.frame(bm[stats::na.omit(m), ])
     rownames(data) <- data[, biomart.filter]
     colnames(data) <- biomart.fields
 
@@ -48,7 +48,7 @@ createSingleCellExperiment <- function(data.files, metadata.files = NULL, cell.i
     metadata <- Reduce(function(a, b) dplyr::left_join(a, b, by = cell.identifier), metadata_)
 
     m <- match(colnames(expression[[1]]), make.names(metadata[, get("cell.identifier")]))
-    colData <- as.data.frame(metadata[na.omit(m), ])
+    colData <- as.data.frame(metadata[stats::na.omit(m), ])
     rownames(colData) <- make.names(colData[, cell.identifier])
   } else {
     colData <- NULL

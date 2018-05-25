@@ -52,6 +52,6 @@ FanoOverA <- function(A = 2, na.rm = TRUE) {
   function(x) {
     if (na.rm)
       x <- x[!is.na(x)]
-    var(x) / mean(x) > A
+    stats::var(x) / mean(x) > A
   }
 }
