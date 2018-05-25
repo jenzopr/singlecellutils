@@ -34,7 +34,7 @@ Imports:
     stats,
     stringr,
     reticulate,
-    SummarizedExperiment
+    SummarizedExperiment,
+    genefilter
 RoxygenNote: 6.0.1
-Suggests: genefilter,
-    lintr
+Suggests: lintr

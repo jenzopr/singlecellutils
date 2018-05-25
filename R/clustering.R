@@ -41,96 +41,6 @@ hdbscan <- function(object, use_dimred, min_samples = 7L, min_cluster_size = 9L,
   return(factor(labels))
 }
 
-#' Clusters a SOM into k regions determined by k-means
-#'
-#' @param som The SOM object.
-#' @param kmax The number of clusters. If NULL, will determine k internally.
-#' @param dist.fun Function to aggregate neighborhood distances.
-#' @param use.codes Perform clustering only on a subset of codes.
-#' @param even.layout Whether the map layout is even (odd otherwise).
-#' @param max.rounds Maximum number of cluster assignments.
-#' @param ... Additional parameters.
-#'
-#' @return A clustering of the SOM.
-clusterSOM <- function(som, kmax = NULL, dist.fun = median, use.codes = NULL, even.layout = T, max.rounds = max(100, nrow(som$codes)), ...) {
-  if (!is(som, "kohonen")) {
-    stop("Supplied object som is not of class kohonen.")
-  }
-  if (is.null(use.codes)) {
-    use.codes <- 1:ncol(som$codes)
-  }
-  codes <- som$codes[, use.codes]
-  # Get neighborhood
-  neighborhood <- constructHexNeighborhood(som$grid$ydim, som$grid$xdim, even.layout = even.layout)
-  # Create neighborhood distances
-  n.distances <- sapply(1:nrow(codes), function(mi) {
-    Ni <- neighborhood[[mi]]
-    #distances <- lapply(Ni, function(mj, mi) L2norm(codes[mi,]-codes[mj,]), mi=mi)
-    distances <- lapply(Ni, function(mj, mi) 1 - cor(codes[mi, ], codes[mj, ]), mi = mi)
-    do.call(dist.fun, list(x = unlist(distances)))
-  })
-  # Find local minima
-  local_minima_set <- sapply(1:nrow(codes), function(mi) {
-    Ni <- c(mi, neighborhood[[mi]])
-    min <- which.min(n.distances[Ni])
-    Ni[min]
-  })
-  # Maximum quorum
-  local_minima_table <- table(local_minima_set)
-  local_minima <- as.numeric(names(local_minima_table)[order(local_minima_table, decreasing = T)])
-  # Removing neighboring local minima in decreasing order
-  kept_minima <- rep(T, length(local_minima))
-  for (i in 1:length(local_minima)) {
-    if (kept_minima[i]) {
-      minima_neighbors <- neighborhood[[local_minima[i]]]
-      kept_minima[which(local_minima %in% minima_neighbors)] <- F
-    }
-  }
-  # Remove non-selfvoters
-  cluster_seeds <- local_minima[kept_minima]
-  selfvoter <- (cluster_seeds == local_minima_set[cluster_seeds])
-  cluster_seeds <- cluster_seeds[selfvoter]
-  # Reduce cluster.seeds further if needed
-  if (!is.null(kmax)) {
-    cluster_seeds <- cluster_seeds[1:min(kmax, length(cluster_seeds))]
-  }
-  # Prepare for clustering
-  unassigned <- !(1:nrow(codes) %in% cluster_seeds)
-  clustering <- as.list(cluster_seeds)
-  # Clustering
-  round <- 1
-  while(sum(unassigned) > 0 & round < max.rounds) {
-    cl_border_dists <- sapply(clustering, function(c) {
-      cluster_seed <- c[1]
-      cluster_neighborhood <- unique(unlist(neighborhood[c]))
-      cluster_border <- cluster_neighborhood[which(unassigned[cluster_neighborhood])]
-      if (length(cluster_border) == 0) {
-        return(c(NA, Inf))
-      }
-      #border.dists <- sapply(cluster.border, function(mj,ci) L2norm(codes[ci,]-codes[mj,]), ci=cluster.seed)
-      border_dists <- sapply(cluster_border, function(mj, ci) 1 - cor(codes[ci, ], codes[mj, ]), ci = cluster_seed)
-      min <- which.min(border_dists)[1]
-      return(c(cluster_border[min], border_dists[min]))
-    })
-    i <- which.min(cl_border_dists[2, ])
-    new_member <- cl_border_dists[1, i]
-    if (is.na(new.member)) {
-      next
-    }
-    if (unassigned[new_member]) {
-      clustering[[i]] <- c(clustering[[i]], new_member)
-      unassigned[new_member] <- F
-    }
-    round <- round + 1
-  }
-  # Prepare for return
-  ret <- rep(NA, nrow(codes))
-  for (i in 1:length(clustering)) {
-    ret[clustering[[i]]] <- i
-  }
-  return(ret)
-}
-
 #' Calculates a summarized som for a list of components
 #'
 #' @param som The SOM object
@@ -141,8 +51,6 @@ clusterSOM <- function(som, kmax = NULL, dist.fun = median, use.codes = NULL, ev
 #' If \code{codes} is a list of component numbers, the summarization is done sequentially for each list.
 #'
 #' @return A summarized SOM codes matrix. Each column corresponds to a list element from the \code{codes} input.
-#'
-#' @export
 summarizeSOM <- function(som, codes = NULL, summarize.fun = mean, ...) {
   if (!is(som, "kohonen")) {
     stop("Supplied object som is not of class kohonen.")
@@ -167,8 +75,6 @@ summarizeSOM <- function(som, codes = NULL, summarize.fun = mean, ...) {
 #' @param clustering An optional clustering of SOM nodes.
 #'
 #' @return Row indices or data row names for each node or each cluster as a list.
-#'
-#' @export
 getSOMgenes <- function(som, clustering = NULL) {
   if (!is(som, "kohonen")) {
     stop("Supplied object som is not of class kohonen.")
