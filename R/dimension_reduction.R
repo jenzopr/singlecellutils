@@ -11,7 +11,7 @@
 reduce_dimension <- function(object, flavor = c("umap", "som"), slot = flavor, ...) {
   embedding <- switch(flavor,
     umap = umap(object, ...),
-    som = t(som(object, ...)$codes[[1]]))
+    som = t(calcSOM(object, ...)$codes[[1]]))
   SingleCellExperiment::reducedDim(object, slot) <- embedding
   return(object)
 }
