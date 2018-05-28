@@ -1,3 +1,21 @@
+#' Adds results from a particular dimension reduction technique to the object.
+#'
+#' @param object A SingleCellExperiment object.
+#' @param exprs_values String indicating which assay contains the data that should be used to calculate the fraction of identity.
+#' @param features A character vector (of feature names), a logical vector or numeric vector (of indices) specifying the features to use for calculation. The default of NULL will use all features.
+#' @param slot Determines which entry of the \code{reducedDims} slot to use for reduced embedding.
+#' @param ... Additional parameters passed to \code{calcFractionOfIdentity}.
+#'
+#' @return A SingleCellExperiment object with modified \code{reducedDims} slot.
+#'
+#' @export
+add_fraction_of_identity <- function(object, exprs_values = "counts", features = NULL, slot = 'fraction_of_identity', ...) {
+  foi <- calcFractionOfIdentity(data = SummarizedExperiment::assay(object, i = exprs_values)[features,], ...)
+  SingleCellExperiment::reducedDim(object, slot) <- foi$identity
+  return(object)
+}
+
+
 #' Orders cells along a pseudotime between two or more known states.
 #' This method implements the fraction of identity approach of Treutlein et. al. (2016)
 #'

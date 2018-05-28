@@ -4,16 +4,14 @@
 \alias{plotSilhouette}
 \title{Plots a silhouette plot}
 \usage{
-plotSilhouette(object, use_dimred, clusters, ...)
+plotSilhouette(object, use_dimred, clusters)
 }
 \arguments{
-\item{object}{A SinglecellExperiment object}
+\item{object}{A SinglecellExperiment object.}
 
-\item{use_dimred}{A character string indicating which dimension reduction to use}
+\item{use_dimred}{A character string indicating which dimension reduction to use.}
 
-\item{clusters}{A character string indicating which annotation to use as clusters}
-
-\item{...}{Other arguments passed to other functions}
+\item{clusters}{A character string indicating which annotation to use as clusters.}
 }
 \value{
 A ggplot object

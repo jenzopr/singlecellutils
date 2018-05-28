@@ -4,7 +4,7 @@
 \alias{normByWindow}
 \title{A generic function to normalize a statistic by a summary statistic across windows}
 \usage{
-normByWindow(stat, order_by = stat, func = median, window = 100,
+normByWindow(stat, order_by = stat, func = stats::median, window = 100,
   normalize = TRUE)
 }
 \arguments{

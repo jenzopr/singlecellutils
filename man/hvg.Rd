@@ -14,8 +14,6 @@ hvg(data, min.cv2 = 0.3, mean.quantile = 0.95, padj.method = "fdr")
 \item{mean.quantile}{The quantile that should be used to define a minimum mean for genes used in fit.}
 
 \item{padj.method}{Method used in adjusting p-values.}
-
-\item{windsorize}{Whether windsorization should be applied to data}
 }
 \value{
 A list with the fit coefficients, the ordered variance and corresponding adjusted p-values.

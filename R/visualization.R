@@ -1,38 +1,3 @@
-#' Visualizes tSNE maps with colored clusters by pam.
-#'
-#' @param tsne The data matrix from a tSNE dimension reduction call
-#' @param k The number of clusters. If NULL, will perform Gap statistics.
-#' @param use.pal The RColorBrewer palette name to use for cluster colors.
-#' @param add.center Whether cluster centers should be added to the plot.
-#' @param medoids length-k vector of integer indices specifying intial medoids.
-#' @param ... Other parameters passed to cluster::pam.
-#'
-#' @return The augmented input data matrix. Clusters are added in .cluster column.
-#'
-#' @export
-vistSNE <- function(tsne, k = NULL, use.pal = "Dark2", add.center = T, medoids = NULL, ...) {
-  if (!is.null(medoids)) {
-    k <- length(medoids)
-  }
-  if (is.null(k)) {
-    cg <- cluster::clusGap(tsne, cluster::pam, 10, d.power = 2)
-    k <- cluster::maxSE(cg$Tab[, 3], cg$Tab[, 4], method = "firstSEmax", .25)
-  }
-  if (k < 2) {
-    stop("Cannot cluster tSNE into less than 2 clusters. Set k to at least 2.")
-  }
-  cl <- cluster::pam(x = tsne, k = k, medoids = medoids, ...)
-  pal <- RColorBrewer::brewer.pal(k, use.pal)
-
-  plot(tsne[, 1], tsne[, 2], xlab = "tSNE dimension 1", ylab = "tSNE dimension 2", col = pal[cl$clustering], pch = 20)
-  if (add.center) {
-    points(cl$medoids[, 1], cl$medoids[, 2], pch = 25, col = pal)
-    text(cl$medoids[, 1] + 0.05, cl$medoids[, 2], labels = 1:k)
-  }
-
-  return(invisible(broom::augment(cl, tsne)))
-}
-
 #' A function to color observations on a map based on values of a vector.
 #'
 #' @param data The data matrix with observation coordinates in the first two columns.
@@ -123,48 +88,45 @@ colorAMap <- function(data, colour_by, shape_by = NULL, palette = RColorBrewer::
   return(p)
 }
 
-#' Creates a sorted bar plot.
+#' Creates a sorted bar plot of expression values.
 #'
-#' @param data The data matrix or data.frame.
-#' @param marker A numerical index or rowname.
-#' @param decreasing Whether the expression values should be sorted decreasing.
-#' @param cell.names A vector of alternative cell names.
-#' @param cell.groups A factor of cell groups. If specified, cells will be colored accordingly.
+#' @param object A SingleCellExperiment object.
+#' @param exprs_values String indicating which assay contains the data that should be used to perform thinning.
+#' @param feature A numerical index or character vector giving the rowname.
+#' @param colour_by Character giving the name of a column in \code{colData} to color by.
 #' @param threshold A lower bound for expression. Values below will be shown as 10^-2.
-#' @param y.unit A character giving the unit of expression.
+#' @param decreasing Whether the expression values should be sorted decreasing.
 #'
 #' @return A ggplot2 figure.
 #'
+#' @importFrom rlang .data
 #' @export
-visMarkerBar <- function(data, marker, decreasing = TRUE, cell.names = NULL, cell.groups = NULL, threshold = 10^-2, y.unit = NULL) {
-  if (!is.null(cell.names) & ncol(data) == length(cell.names)) {
-    colnames(data) <- cell.names
-  }
-  if (!is.null(y.unit)) {
-    y.label <- paste("(", y.unit, ")", sep = "")
-  } else {
-    y.label <- ""
-  }
-  if (is.null(cell.groups)) {
-    cell.groups <- rep("none", ncol(data))
-  }
-  e <- data[marker, ]
+visMarkerBar <- function(object, exprs_values, feature, colour_by = NULL, threshold = 10^-2, decreasing = TRUE) {
+  e <- SummarizedExperiment::assay(object, i = exprs_values)
   if (!is.null(e)) {
     order <- order(e, decreasing = decreasing)
-    data <- data.frame(cell = factor(colnames(e), levels = colnames(e)[order]),
-                       expr = ifelse(as.numeric(e) < threshold, 10^ - 2, as.numeric(e)),
-                       group = cell.groups)
-    p <- ggplot2::ggplot(data, aes(x = cell, y = expr, fill = group)) +
+
+    if (!is.null(colour_by)) {
+      data <- data.frame(cell = factor(colnames(object), levels = colnames(object)[order]),
+                         expr = ifelse(as.numeric(e) < threshold, 10^ - 2, as.numeric(e)),
+                         group = SummarizedExperiment::colData(object)[, colour_by])
+      p <- ggplot2::ggplot(data, ggplot2::aes(x = .data$cell, y = .data$expr, fill = .data$group)) +
+        ggplot2::scale_fill_brewer(type = "qual", palette = "Paired")
+    } else {
+      data <- data.frame(cell = factor(colnames(object), levels = colnames(object)[order]),
+                         expr = ifelse(as.numeric(e) < threshold, 10^ - 2, as.numeric(e)))
+      p <- ggplot2::ggplot(data, ggplot2::aes(x = .data$cell, y = .data$expr))
+    }
+    p <- p +
       ggplot2::geom_bar(stat = "identity") +
-      ggplot2::scale_fill_brewer(type = "qual", palette = "Paired") +
-      ggplot2::ylab(paste("Expression level", y.label)) +
+      ggplot2::ylab("Expression level") +
       ggplot2::xlab("Individual single-cells sorted by expression") +
-      ggplot2::ggtitle(marker) +
-      ggplot2::theme(axis.text.x  = element_text(angle = 90, hjust = 0.5, vjust = 0.5, size = 8), panel.background = element_rect(fill = "#FFFFFF"))
+      ggplot2::ggtitle(feature) +
+      ggplot2::theme(axis.text.x  = ggplot2::element_text(angle = 90, hjust = 0.5, vjust = 0.5, size = 8), panel.background = ggplot2::element_rect(fill = "#FFFFFF"))
     return(p)
   }
   else {
-    warning(paste("Data did not contain a row", marker))
+    warning(paste("Data did not contain a row", feature))
     return(NULL)
   }
 }
@@ -172,7 +134,7 @@ visMarkerBar <- function(data, marker, decreasing = TRUE, cell.names = NULL, cel
 #' Visualizes SOM components
 #'
 #' @param som The self-organizing map object.
-#' @param code The codes that should be displayed.
+#' @param codes The codes that should be displayed.
 #' @param titles The title for each component.
 #' @param what A keyword for what to plot.
 #' @param aggregate.FUN A function to use for aggregation of codes.
@@ -184,9 +146,10 @@ visMarkerBar <- function(data, marker, decreasing = TRUE, cell.names = NULL, cel
 #'
 #' @return A ggplot2 object or a list of ggplot2 objects, in case of multiple maps.
 #'
+#' @importFrom rlang .data
 #' @export
 visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "aggregate", "overexpression", "underexpression"), aggregate.FUN = mean, scale = c("none", "minmax", "zscore"), palette = NULL, omit.title = FALSE, omit.fill = FALSE, coords.fix = TRUE) {
-  if (!is(som, "kohonen")) {
+  if (!methods::is(som, "kohonen")) {
     stop("Supplied object som is not of class kohonen.")
   }
   if (is.null(codes)) {
@@ -208,8 +171,8 @@ visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "a
                  code = as.matrix(som$codes[, codes]),
                  population = as.matrix(table(som$unit.classif)),
                  aggregate = as.matrix(apply(som$codes[, codes], 1, aggregate.FUN)),
-                 overexpression = as.matrix(apply(apply(som$codes[, codes], 2, function(x) ifelse(x > quantile(x, probs = 0.98), x, NA)), 1, mean, na.rm=T)),
-                 underexpression = as.matrix(apply(apply(som$codes[, codes], 2, function(x) ifelse(x < quantile(x, probs = 0.02), x, NA)), 1, mean, na.rm=T)))
+                 overexpression = as.matrix(apply(apply(som$codes[, codes], 2, function(x) ifelse(x > stats::quantile(x, probs = 0.98), x, NA)), 1, mean, na.rm=T)),
+                 underexpression = as.matrix(apply(apply(som$codes[, codes], 2, function(x) ifelse(x < stats::quantile(x, probs = 0.02), x, NA)), 1, mean, na.rm=T)))
 
   if (is.null(palette)) {
     palette <- switch(scaling,
@@ -223,12 +186,12 @@ visSOM <- function(som, codes=NULL, titles=NULL, what=c("code", "population", "a
 
   res <- lapply(1:ncol(data), function(i) {
     df <- data.frame(hexgrid, value = rep(data[, i], each = 6))
-    p <- ggplot2::ggplot(df, aes(x = x, y = y, group = group, fill = value)) +
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$x, y = .data$y, group = .data$group, fill = .data$value)) +
       ggplot2::geom_polygon()
 
     if (!omit.fill) p <- p + ggplot2::scale_fill_gradientn(colours = palette)
     if (coords.fix) p <- p + ggplot2::coord_fixed(ratio = 1)
-    if (!omit.title) p <- p + ggtitle(titles[i])
+    if (!omit.title) p <- p + ggplot2::ggtitle(titles[i])
     return(p)
   })
   if (length(res) == 1) {
@@ -277,37 +240,6 @@ hexcoords2 <- function(x, y, height = NULL, width = sqrt(3) / 2 * height) {
   res
 }
 
-#' Creates a violin plot for selected genes
-#'
-#' @param data The expression data (as data.frame)
-#' @param gene.names A character vector of associated gene names (optional)
-#' @param group A possible grouping factor
-#'
-#' @return A ggplot2 figure.
-#'
-#' @export
-visMarkerViolin <- function(data, gene.names = NULL, group = NULL) {
-  if (is.null(gene.names)) {
-    gene.names <- row.names(data)
-  }
-  if (is.null(group)) {
-    group <- rep(1, ncol(data))
-  }
-  data$gene <- factor(gene.names, levels = gene.names[order(gene.names, decreasing = T)])
-  m <- reshape2::melt(data, id.vars = c("gene"))
-  colnames(m) <- c("gene", "cell", "value")
-  m$group <- gsub(group, "\\1", m$cell)
-
-  p <- ggplot2::ggplot(m, ggplot2::aes(gene, value)) +
-    ggplot2::geom_violin(trim = T, scale = "width") +
-    ggplot2::geom_jitter(alpha = 0.5, ggplot2::aes(color = group), width = 0.75) +
-    ggplot2::coord_flip() +
-    ggplot2::xlab("") +
-    ggplot2::ylab("log2( Transcripts per Million )") #+
-    #ggplot2::scale_colour_manual(values = cols)
-  return(p)
-}
-
 #' Draws a smoothScatter-Plot with hvg fit line and highlighted variable genes.
 #'
 #' @param data The normalized count table.
@@ -317,7 +249,7 @@ visMarkerViolin <- function(data, gene.names = NULL, group = NULL) {
 #' @export
 hvg.plot <- function(data, hvg.fit, n = 500) {
   means <- rowMeans(data)
-  vars <- apply(data, 1, var)
+  vars <- apply(data, 1, stats::var)
   cv2 <- vars / means^2
 
   xg <- exp(seq(min(log(means[means > 0])), max(log(means)), length.out = 1000))
@@ -327,66 +259,25 @@ hvg.plot <- function(data, hvg.fit, n = 500) {
                 lattice::panel.xyplot(x, y, ...)
                 vfit <- hvg.fit$a1 / xg + hvg.fit$a0
                 lattice::panel.lines(log(xg), log(vfit), col = 2)
-                lattice::panel.lines(log(xg), log(vfit * qchisq(0.975, hvg.fit$df) / hvg.fit$df), lty = 2, col = 2)
-                lattice::panel.lines(log(xg), log(vfit * qchisq(0.025, hvg.fit$df) / hvg.fit$df), lty = 2, col = 2)
+                lattice::panel.lines(log(xg), log(vfit * stats::qchisq(0.975, hvg.fit$df) / hvg.fit$df), lty = 2, col = 2)
+                lattice::panel.lines(log(xg), log(vfit * stats::qchisq(0.025, hvg.fit$df) / hvg.fit$df), lty = 2, col = 2)
                 lattice::panel.points(x[hvg.fit$order[1:n]], y[hvg.fit$order[1:n]], col = 2)
               }, col = "black", hvg.fit = hvg.fit, xg = xg, n = n)
   return(p)
 }
 
-#' Plot cells along their fraction of identity to a given state
-#'
-#' @param identity A vector giving the cells identity value or a list from calcFractionOfIdentity call
-#' @param data A numerical vector according which the cells are colored
-#' @param data.name A name that will be shown as plot.main
-#' @param data.discrete Logical indicating whether data is discrete (like groups)
-#' @param pal The color palette
-#' @param state If identity is a list, chooses the given state for ordering
-#' @param decreasing Logical, whether ordering should be decreasing (the default)
-#'
-#' @export
-colorIdentity <- function(identity, data=NULL, data.name=NULL, data.discrete=FALSE, pal=viridis::viridis(99), state=NULL, decreasing = TRUE) {
-  if (typeof(identity) != "double" & typeof(identity) != "list") {
-    stop("Parameter identity should be of type double or list.")
-  }
-  if ( typeof(identity) == "double") {
-    id <- as.matrix(identity)
-    state <- 1
-  } else {
-    if ( is.null(state)) {
-      warning("When identity is a list, state cannot be NULL. Taking state 1 instead..")
-      state <- 1
-    }
-    id <- identity$identity
-  }
-  ind <- 1:nrow(id)
-  order <- order(id[, state], decreasing = decreasing)
-
-  colors <- "black"
-  if ( !is.null(data) ) {
-    colors <- pal[findInterval(data, seq(0, 1, length.out = length(pal) + 1), all.inside = TRUE)][order]
-    if ( data.discrete ) {
-      colors <- pal[as.numeric(data)][order]
-    }
-  }
-
-  plot(ind, id[order, state], col = colors, ylim = c(0, 1), pch = 16, bty = "n", axes = F, xlab = "pseudotime", ylab = "fraction of identity", main = data.name)
-  axis(1, labels = F)
-  axis(2, labels = T)
-}
-
 #' Plots a silhouette plot
 #'
-#' @param object A SinglecellExperiment object
-#' @param use_dimred A character string indicating which dimension reduction to use
-#' @param clusters A character string indicating which annotation to use as clusters
-#' @param ... Other arguments passed to other functions
+#' @param object A SinglecellExperiment object.
+#' @param use_dimred A character string indicating which dimension reduction to use.
+#' @param clusters A character string indicating which annotation to use as clusters.
 #'
 #' @return A ggplot object
 #'
+#' @importFrom rlang .data
 #' @export
-plotSilhouette <- function(object, use_dimred, clusters, ...) {
-  if ( !is(object, "SingleCellExperiment") ) {
+plotSilhouette <- function(object, use_dimred, clusters) {
+  if ( !methods::is(object, "SingleCellExperiment") ) {
     stop("Object must be of class SingleCellExperiment")
   }
 
@@ -394,21 +285,21 @@ plotSilhouette <- function(object, use_dimred, clusters, ...) {
     stop(paste("Object must contain a reducedDim named", use_dimred))
   }
 
-  if (!clusters %in% colnames(colData(object))) {
+  if (!clusters %in% colnames(SummarizedExperiment::colData(object))) {
     stop(paste("Object must contain a column", clusters, "in colData"))
   }
 
-  if (!is.factor(colData(object)[, clusters])) {
-    cl <- factor(colData(object)[, clusters])
+  if (!is.factor(SummarizedExperiment::colData(object)[, clusters])) {
+    cl <- factor(SummarizedExperiment::colData(object)[, clusters])
   } else {
-    cl <- colData(object)[, clusters]
+    cl <- SummarizedExperiment::colData(object)[, clusters]
   }
 
-  s <- calculateSilhouette(SingleCellExperiment::reducedDim(object, use_dimred), cl, ...)
-  o <- order(as.numeric(cl), s)
-  df <- data.frame(cell = factor(colnames(object)[o], levels = colnames(object)[o], ordered = T), silhouette = s[o], cluster = cl[o])
+  s <- cluster::silhouette(as.numeric(cl), dist = stats::dist(SingleCellExperiment::reducedDim(object, use_dimred)))
+  df <- data.frame(cell = factor(colnames(object), levels = colnames(object)), silhouette = s[, "sil_width"], cluster = factor(s[,"cluster"]))
 
-  ggplot2::ggplot(df, ggplot2::aes(y = silhouette, x = cell, fill = cluster, colour = cluster)) +
+  ggplot2::ggplot(data = df, ggplot2::aes(.data$cell, .data$silhouette, color = .data$cluster, fill = .data$cluster)) +
     ggplot2::geom_bar(stat = "identity", position = "dodge") +
-    ggplot2::coord_flip()
+    ggplot2::coord_flip() +
+    ggplot2::scale_color_brewer(palette = "Dark2")
 }

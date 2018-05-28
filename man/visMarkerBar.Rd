@@ -2,29 +2,27 @@
 % Please edit documentation in R/visualization.R
 \name{visMarkerBar}
 \alias{visMarkerBar}
-\title{Creates a sorted bar plot.}
+\title{Creates a sorted bar plot of expression values.}
 \usage{
-visMarkerBar(data, marker, decreasing = TRUE, cell.names = NULL,
-  cell.groups = NULL, threshold = 10^-2, y.unit = NULL)
+visMarkerBar(object, exprs_values, feature, colour_by = NULL,
+  threshold = 10^-2, decreasing = TRUE)
 }
 \arguments{
-\item{data}{The data matrix or data.frame.}
+\item{object}{A SingleCellExperiment object.}
 
-\item{marker}{A numerical index or rowname.}
+\item{exprs_values}{String indicating which assay contains the data that should be used to perform thinning.}
 
-\item{decreasing}{Whether the expression values should be sorted decreasing.}
+\item{feature}{A numerical index or character vector giving the rowname.}
 
-\item{cell.names}{A vector of alternative cell names.}
-
-\item{cell.groups}{A factor of cell groups. If specified, cells will be colored accordingly.}
+\item{colour_by}{Character giving the name of a column in \code{colData} to color by.}
 
 \item{threshold}{A lower bound for expression. Values below will be shown as 10^-2.}
 
-\item{y.unit}{A character giving the unit of expression.}
+\item{decreasing}{Whether the expression values should be sorted decreasing.}
 }
 \value{
 A ggplot2 figure.
 }
 \description{
-Creates a sorted bar plot.
+Creates a sorted bar plot of expression values.
 }

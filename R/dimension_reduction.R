@@ -39,7 +39,7 @@ umap <- function(object, exprs_values = 'norm_TPM', features = NULL, scale = T, 
   np <- reticulate::import("numpy", convert=FALSE)
   umap_cl <- umap$UMAP(n_neighbors = as.integer(n_neighbors), min_dist = min_dist, metric = metric)
 
-  input <- assay(object, i = exprs_values)
+  input <- SummarizedExperiment::assay(object, i = exprs_values)
   if (!is.null(features)) {
     input <- SummarizedExperiment::assay(object, i = exprs_values)[features,]
   }
@@ -113,7 +113,7 @@ map.init <- function(data, resolution = 1) {
   h <- round(sqrt(units/phi))
   w <- round(h + (h/phi))
 
-  pcar <- prcomp(data)
+  pcar <- stats::prcomp(data)
   initcodes <- array(0, dim = c(h, w, ncol(data)))
   gridshape <- array(0, dim = c(h * w, ncol(data)))
   for (x in 1:w) {
@@ -137,7 +137,7 @@ map.init.local <- function(data, resolution = 1) {
   h <- round(sqrt(units/phi))
   w <- round(h + (h/phi))
 
-  pcar <- prcomp(data)
+  pcar <- stats::prcomp(data)
   gridshape <- array(0, dim = c(h * w, ncol(data)))
 
   h_pos <- as.numeric(cut(pcar$x[,1], breaks=h))
@@ -145,8 +145,8 @@ map.init.local <- function(data, resolution = 1) {
   cell_pos <- (h_pos - 1) * w + w_pos
   n <- constructHexNeighborhood(h, w, even.layout = T)
 
-  h_genes <- rownames(datamat)[order(abs(pcar$rotation[,1]), decreasing = T)[1:100]]
-  w_genes <- rownames(datamat)[order(abs(pcar$rotation[,2]), decreasing = T)[1:100]]
+  h_genes <- rownames(data)[order(abs(pcar$rotation[,1]), decreasing = T)[1:100]]
+  w_genes <- rownames(data)[order(abs(pcar$rotation[,2]), decreasing = T)[1:100]]
   genes <- unique(c(h_genes, w_genes))
 
   for(i in 1:ncol(data)) {

@@ -12,6 +12,8 @@ visSOM(som, codes = NULL, titles = NULL, what = c("code", "population",
 \arguments{
 \item{som}{The self-organizing map object.}
 
+\item{codes}{The codes that should be displayed.}
+
 \item{titles}{The title for each component.}
 
 \item{what}{A keyword for what to plot.}
@@ -27,8 +29,6 @@ visSOM(som, codes = NULL, titles = NULL, what = c("code", "population",
 \item{omit.fill}{Whether the colour fill should be omitted during plot.}
 
 \item{coords.fix}{Whether ratio of coordinates should be fixed to 1.}
-
-\item{code}{The codes that should be displayed.}
 }
 \value{
 A ggplot2 object or a list of ggplot2 objects, in case of multiple maps.

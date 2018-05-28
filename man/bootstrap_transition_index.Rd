@@ -19,6 +19,8 @@ bootstrap_transition_index(object, exprs_values, grouping, features = NULL,
 \item{n}{The subsample size for non-parametric bootstrapping.}
 
 \item{R}{The bootstrapping size.}
+
+\item{...}{Additional parameters passed to \code{...}.}
 }
 \value{
 A matrix with all bootstrap samples per grouping level (\code{R} rows, \code{length(levels(group))} columns)

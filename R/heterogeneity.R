@@ -10,7 +10,7 @@
 #' @export
 add_heterogeneity <- function(object, exprs_values = "counts", column = ".heterogeneity", ...) {
   het <- heterogeneity(SummarizedExperiment::assay(object, i = exprs_values), ...)
-  object <- SingleCellExperiment::mutate(object, !!column := het)
+  object <- scater::mutate(object, !!column := het)
   return(object)
 }
 
@@ -26,7 +26,7 @@ cv2.fun <- function(x) {
   if (mean(x) == 0) {
     return(0)
   }
-  var(x) / mean(x)^2
+  stats::var(x) / mean(x)^2
 }
 
 #' Calculates the drouput percentage
@@ -135,7 +135,7 @@ normByBin <- function(stat, order_by = stat, func = mean, n_bins = 30, normalize
   if (normalize) {
     bin_sd <- sapply(bins, function(s) {
       in_bin <- names(s)
-      sd(stat[in_bin])
+      stats::sd(stat[in_bin])
     })
   } else {
     bin_sd <- rep(1, n_bins)
@@ -159,7 +159,7 @@ normByBin <- function(stat, order_by = stat, func = mean, n_bins = 30, normalize
 #' @return A vector with the difference to the summarized statistic
 #'
 #' @export
-normByWindow <- function(stat, order_by = stat, func = median, window = 100, normalize = TRUE) {
+normByWindow <- function(stat, order_by = stat, func = stats::median, window = 100, normalize = TRUE) {
   if (is.null(names(stat))) {
     names(stat) <- 1:length(stat)
   }
@@ -172,7 +172,7 @@ normByWindow <- function(stat, order_by = stat, func = median, window = 100, nor
 
   # Calculate summary statistic in a window of x genes
   r <- zoo::rollapply(data = stat[s], width = window, FUN = func, fill = "extend")
-  r2 <- zoo::rollapply(data = stat[s], width = window, FUN = sd, fill = "extend")
+  r2 <- zoo::rollapply(data = stat[s], width = window, FUN = stats::sd, fill = "extend")
   names(r) <- s
   names(r2) <- s
 
@@ -190,7 +190,7 @@ normByWindow <- function(stat, order_by = stat, func = median, window = 100, nor
 #' Calculate the Theil's T statistic for each gene and normalize it to the dropout rate. Also calculates a p-value for the residual deviation from a normal distribution.
 #'
 #' @param data A numerical matrix or data.frame.
-#' @param use.qantile The quantile that has to be exceeded for fitting.
+#' @param use.quantile The quantile that has to be exceeded for fitting.
 #' @param ... other parameters passed to theils.t
 #'
 #' @return A list with the following components:
@@ -208,14 +208,14 @@ norm.theil.t <- function(data, use.quantile = 0.05, ...) {
   theil <- apply(data, 1, inequality.fun)#, ...)
 
   # Fit model
-  use <- theil > quantile(theil, use.quantile)
-  fit <- lm(log(theil[use] + 1)~dropin[use])
+  use <- theil > stats::quantile(theil, use.quantile)
+  fit <- stats::lm(log(theil[use] + 1)~dropin[use])
   i <- fit$coefficients[1]
   d <- fit$coefficients[2]
 
   theoretical <- exp(i + d * dropin) - 1
   res <- scale(theil - theoretical)
-  pval <- pnorm(res, lower.tail = F)
+  pval <- stats::pnorm(res, lower.tail = F)
 
   # Order by pval and assemble return
   o <- order(pval)
@@ -245,7 +245,7 @@ winsorize <- function(x, fraction = 0.05, absolute = NULL, two.sided = TRUE) {
     if (length(fraction) != 1 || fraction < 0 || fraction > 0.5) {
         stop("bad value for 'fraction'")
     }
-    lim <- quantile(x, probs = c(fraction, 1 - fraction))
+    lim <- stats::quantile(x, probs = c(fraction, 1 - fraction))
     if (two.sided) {
         x[x < lim[1]] <- lim[1]
     }
@@ -329,17 +329,16 @@ theils.within <- function(x, groups) {
 #' @param min.cv2 Minimum coefficient of variation for genes used in fit.
 #' @param mean.quantile The quantile that should be used to define a minimum mean for genes used in fit.
 #' @param padj.method Method used in adjusting p-values.
-#' @param windsorize Whether windsorization should be applied to data
 #'
 #' @return A list with the fit coefficients, the ordered variance and corresponding adjusted p-values.
 #'
 #' @export
 hvg <- function(data, min.cv2 = .3, mean.quantile = .95, padj.method = "fdr") {
   means <- rowMeans(data)
-  vars <- apply(data, 1, var)
+  vars <- apply(data, 1, stats::var)
   cv2 <- vars / means^2
 
-  min.mean <- unname(quantile(means[which(cv2 > min.cv2)], mean.quantile))
+  min.mean <- unname(stats::quantile(means[which(cv2 > min.cv2)], mean.quantile))
   use <- means >= min.mean
   fit <- statmod::glmgam.fit(cbind( a0 = 1, a1tilde = 1 / means[use] ), cv2[use])
   a0 <- unname( fit$coefficients["a0"] )
@@ -348,53 +347,8 @@ hvg <- function(data, min.cv2 = .3, mean.quantile = .95, padj.method = "fdr") {
   varFitRatio <- vars / (afit * means^2)
   varorder <- order(varFitRatio, decreasing = T)
   df <- ncol(data) - 1
-  pval <- pchisq(varFitRatio * df, df = df, lower.tail = F)
-  adj.pval <- p.adjust(pval, method = padj.method)
+  pval <- stats::pchisq(varFitRatio * df, df = df, lower.tail = F)
+  adj.pval <- stats::p.adjust(pval, method = padj.method)
   list(a0 = a0, a1 = a1, order = varorder, pval = adj.pval[varorder], df = df)
 }
 
-
-theil.neu <- function(data, min.size = 100, cutoff = 5, ...) {
-  dropin <- 1 - apply(data, 1, function(x) sum(x < cutoff) / length(x))
-  theil <- apply(data, 1, expression.inequality)#, ...)
-  data.nz <- data
-  data.nz[data.nz < cutoff] <- NA
-  mean.nz <- rowMeans(log2(data.nz+1), na.rm = T)
-
-  use <- mean.nz < quantile(mean.nz, 0.8, na.rm = T) & mean.nz > quantile(mean.nz, 0.2, na.rm = T)
-
-  smoothScatter(mean.nz[use], theil[use])
-  smoothScatter(dropin[use], theil[use])
-  smoothScatter(dropin[use], log(theil[use]+1))
-  smoothScatter(mean.nz[use], dropin[use])
-
-  # Fit model
-  fit <- lm(log(theil[use] + 1)~dropin[use])
-  i <- fit$coefficients[1]
-  d <- fit$coefficients[2]
-
-  theoretical <- exp(i + d * dropin) - 1
-  smoothScatter(dropin[use], theil[use])
-  smoothScatter(dropin[use], theoretical[use])
-
-  res <- theil - theoretical
-  z <- (res - mean(res))/sd(res)
-  #smoothScatter(dropin[use], res[use], col="red")
-  pval <- pnorm(z, lower.tail = F)
-  p.adj <- p.adjust(pval, method="fdr")
-
-  smoothScatter(dropin, theil)
-  points(dropin[pval < 0.05], theil[pval < 0.05], col="red")
-  smoothScatter(rowMeans(log10(data+1)), dropin)
-  points(rowMeans(log10(data+1))[pval < 0.05], dropin[pval < 0.05], col="red")
-
-  # Order by pval and assemble return
-  o <- order(pval)
-  return(list(
-    d = d,
-    i = i,
-    theils.t = theil[o],
-    dropin = dropin[o],
-    pval = pval[o]
-  ))
-}

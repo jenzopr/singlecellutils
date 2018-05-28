@@ -5,7 +5,7 @@ Version: 0.1.0
 Authors@R: person(first = "Jens", last = "Preussner", email = "jens.preussner@mpi-bn.mpg.de", role = c("aut", "cre"))
 Maintainer: Jens Preussner <jens.preussner@mpi-bn.mpg.de>
 Description: More about what it does (maybe more than one line)
-License: MIT
+License: MIT + file LICENSE
 LazyData: TRUE
 Imports:
     methods,
@@ -35,6 +35,8 @@ Imports:
     stringr,
     reticulate,
     SummarizedExperiment,
-    genefilter
+    genefilter,
+    rlang,
+    magrittr
 RoxygenNote: 6.0.1
 Suggests: lintr

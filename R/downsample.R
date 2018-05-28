@@ -31,7 +31,7 @@ thin_counts <- function(object, exprs_values, current_libsizes = scater::library
       y_thinned[, k] <- y[,k]
     }
     else {
-      y_thinned[,k] = rbinom(n, y[,k], keep.p);
+      y_thinned[,k] = stats::rbinom(n, y[,k], keep.p);
     }
   }
 

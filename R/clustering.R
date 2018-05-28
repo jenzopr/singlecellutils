@@ -11,7 +11,7 @@
 add_clustering <- function(object, flavor = c("hdbscan"), column = ".cluster", ...) {
   clustering <- switch(flavor,
                        hdbscan = hdbscan(object, ...))
-  object <- SingleCellExperiment::mutate(object, !!column := clustering)
+  object <- scater::mutate(object, !!column := clustering)
   return(object)
 }
 
@@ -52,7 +52,7 @@ hdbscan <- function(object, use_dimred, min_samples = 7L, min_cluster_size = 9L,
 #'
 #' @return A summarized SOM codes matrix. Each column corresponds to a list element from the \code{codes} input.
 summarizeSOM <- function(som, codes = NULL, summarize.fun = mean, ...) {
-  if (!is(som, "kohonen")) {
+  if (!methods::is(som, "kohonen")) {
     stop("Supplied object som is not of class kohonen.")
   }
   if (is.null(codes)) {
@@ -76,7 +76,7 @@ summarizeSOM <- function(som, codes = NULL, summarize.fun = mean, ...) {
 #'
 #' @return Row indices or data row names for each node or each cluster as a list.
 getSOMgenes <- function(som, clustering = NULL) {
-  if (!is(som, "kohonen")) {
+  if (!methods::is(som, "kohonen")) {
     stop("Supplied object som is not of class kohonen.")
   }
   if (is.null(clustering)) {

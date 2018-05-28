@@ -9,7 +9,7 @@
 #' @export
 add_transition_index <- function(object, column, ...) {
   ic <- compute_transition_index(object, ...)
-  object <- SingleCellExperiment::mutate(object, !!column := ic$ic)
+  object <- scater::mutate(object, !!column := ic$ic)
   return(object)
 }
 
@@ -48,6 +48,7 @@ compute_transition_index <- function(object, exprs_values, features = NULL, pval
 #' @param features A character vector (of feature names), a logical vector or numeric vector (of indices) specifying the features to use for calculation. The default of NULL will use all features.
 #' @param n The subsample size for non-parametric bootstrapping.
 #' @param R The bootstrapping size.
+#' @param ... Additional parameters passed to \code{...}.
 #'
 #' @return A matrix with all bootstrap samples per grouping level (\code{R} rows, \code{length(levels(group))} columns)
 #' @export

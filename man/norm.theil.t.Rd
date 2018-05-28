@@ -9,9 +9,9 @@ norm.theil.t(data, use.quantile = 0.05, ...)
 \arguments{
 \item{data}{A numerical matrix or data.frame.}
 
-\item{...}{other parameters passed to theils.t}
+\item{use.quantile}{The quantile that has to be exceeded for fitting.}
 
-\item{use.qantile}{The quantile that has to be exceeded for fitting.}
+\item{...}{other parameters passed to theils.t}
 }
 \value{
 A list with the following components:
