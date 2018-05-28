@@ -1,3 +1,19 @@
+#' Adds a heterogeneity statistic to the object.
+#'
+#' @param object A SingleCellExperiment object.
+#' @param exprs_values String indicating which assay contains the data that should be used calculate heterogeneous genes.
+#' @param column Determines the column name of the \code{rowData} slot to store results to.
+#' @param ... Additional parameters passed to \code{heterogeneity}
+#'
+#' @return A SingleCellExperiment object with modified \code{rowData} slot.
+#'
+#' @export
+add_heterogeneity <- function(object, exprs_values = "counts", column = ".heterogeneity", ...) {
+  het <- heterogeneity(SummarizedExperiment::assay(object, i = exprs_values), ...)
+  object <- SingleCellExperiment::mutate(object, !!column := het)
+  return(object)
+}
+
 #' Calculates the coefficient of variation
 #'
 #' @param x The vector of values
