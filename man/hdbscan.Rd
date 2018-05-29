@@ -12,7 +12,7 @@ hdbscan(object, use_dimred, min_samples = 7L, min_cluster_size = 9L,
 
 \item{use_dimred}{A string or integer scalar indicating the reduced dimension result in \code{reducedDims(object)} to use as input.}
 
-\item{min_samples}{Measure of how conservative the clustering should to be. The larger the value of \code{min_samples}, the more conservative the clustering – more points will be declared as noise, and clusters will be restricted to progressively more dense areas.}
+\item{min_samples}{Measure of how conservative the clustering should to be. The larger the value of \code{min_samples}, the more conservative the clustering and more points will be declared as noise, and clusters will be restricted to progressively more dense areas.}
 
 \item{min_cluster_size}{The smallest size grouping that is considered a cluster.}
 

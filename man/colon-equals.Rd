@@ -4,5 +4,5 @@
 \alias{:=}
 \title{rlang quasiquotation}
 \description{
-See \code{\link[rlang]{\:\=}}.
+See \code{\link[rlang]{quasiquotation}}.
 }

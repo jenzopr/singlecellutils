@@ -22,7 +22,7 @@ add_clustering <- function(object, flavor = c("hdbscan"), column = ".cluster", .
 #'
 #' @param object A SingleCellExperiment object.
 #' @param use_dimred A string or integer scalar indicating the reduced dimension result in \code{reducedDims(object)} to use as input.
-#' @param min_samples Measure of how conservative the clustering should to be. The larger the value of \code{min_samples}, the more conservative the clustering – more points will be declared as noise, and clusters will be restricted to progressively more dense areas.
+#' @param min_samples Measure of how conservative the clustering should to be. The larger the value of \code{min_samples}, the more conservative the clustering and more points will be declared as noise, and clusters will be restricted to progressively more dense areas.
 #' @param min_cluster_size The smallest size grouping that is considered a cluster.
 #' @param outlier Determines how outliers are encoded in the resulting clustering.
 #' @param seed A numeric seed to initialize the random number generator.

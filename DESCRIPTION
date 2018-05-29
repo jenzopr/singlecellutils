@@ -1,42 +1,39 @@
 Package: singlecellutils
 Type: Package
 Title: Utility functions for single-cell data
-Version: 0.1.0
-Authors@R: person(first = "Jens", last = "Preussner", email = "jens.preussner@mpi-bn.mpg.de", role = c("aut", "cre"))
+Version: 0.9.0
+Authors@R: person(given = "Jens", family = "Preussner", email = "jens.preussner@mpi-bn.mpg.de", role = c("aut", "cre"))
 Maintainer: Jens Preussner <jens.preussner@mpi-bn.mpg.de>
-Description: More about what it does (maybe more than one line)
+Description: The singlecellutils package provides auxillary functions to work with data from single cell RNAseq data.
 License: MIT + file LICENSE
 LazyData: TRUE
 Imports:
-    methods,
-    zoo,
-    lawstat,
-    kohonen,
-    cluster,
-    RColorBrewer,
-    broom,
-    ggplot2,
-    reshape2,
-    class,
-    statmod,
-    VGAM,
-    quadprog,
-    viridis,
-    lsr,
     boot,
-    lattice,
-    Hmisc,
-    biomaRt,
-    dplyr,
-    SingleCellExperiment,
-    data.table,
+    cluster,
     graphics,
+    grDevices,
+    lattice,
+    methods,
     stats,
-    stringr,
+    utils,
+    dplyr,
+    ggplot2,
+    Hmisc,
+    kohonen,
+    lsr,
+    magrittr,
+    quadprog,
+    RColorBrewer,
     reticulate,
-    SummarizedExperiment,
-    genefilter,
     rlang,
-    magrittr
+    statmod,
+    stringr,
+    viridis,
+    zoo,
+    data.table,
+    genefilter,
+    SummarizedExperiment,
+    SingleCellExperiment,
+    scater,
+    biomaRt,
 RoxygenNote: 6.0.1
-Suggests: lintr

@@ -8,7 +8,7 @@ NULL
 
 #' rlang quasiquotation
 #'
-#' See \code{\link[rlang]{\:\=}}.
+#' See \code{\link[rlang]{quasiquotation}}.
 #' @name :=
 #' @importFrom rlang :=
 #' @export :=
