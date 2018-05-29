@@ -65,11 +65,11 @@ umap <- function(object, exprs_values = 'norm_TPM', features = NULL, scale = T, 
 #' @return A som object.
 #'
 #' @export
-calcSOM <- function(object, exprs_values = 'norm_TPM', features = NULL, scale = T, num_epochs = 200, resolution = 1, seed = NULL, init = NULL, init.FUN = singlecellutils::map.init, ...) {
+calcSOM <- function(object, exprs_values = 'norm_TPM', features = NULL, scale = T, num_epochs = 200, resolution = 1, seed = NULL, init = NULL, init.FUN = map.init, ...) {
   if (!is.null(features)) {
-    input <- SummarizedExperiment::assay(object, i = exprs_values)[features, ]
+    input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values)[features, ])
   } else {
-    input <- SummarizedExperiment::assay(object, i = exprs_values)[1:min(nrow(input), 5000), ]
+    input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values)[1:min(nrow(object), 5000), ])
   }
   if (scale) input <- t(scale(t(input)))
 
