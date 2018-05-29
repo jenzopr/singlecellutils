@@ -6,7 +6,8 @@
 \usage{
 heterogeneity(data, statistic = c("cv", "dropout", "gini", "inequality",
   "bwt", "mean"), normalization = c("none", "bins", "windows"),
-  order_by = log2(rowMeans(data/10, na.rm = T) + 1), groups = NULL, ...)
+  order_by = log2(Matrix::rowMeans(data/10, na.rm = T) + 1), groups = NULL,
+  ...)
 }
 \arguments{
 \item{data}{A numerical matrix}

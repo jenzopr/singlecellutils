@@ -39,9 +39,9 @@ umap <- function(object, exprs_values = 'norm_TPM', features = NULL, scale = T, 
   np <- reticulate::import("numpy", convert=FALSE)
   umap_cl <- umap$UMAP(n_neighbors = as.integer(n_neighbors), min_dist = min_dist, metric = metric)
 
-  input <- SummarizedExperiment::assay(object, i = exprs_values)
+  input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values))
   if (!is.null(features)) {
-    input <- SummarizedExperiment::assay(object, i = exprs_values)[features,]
+    input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values)[features,])
   }
   if (scale) input <- t(scale(t(input)))
 

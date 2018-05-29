@@ -90,7 +90,7 @@ bw.inequality.fun <- function(x, g) {
 #' @return The statistics value for each observation.
 #'
 #' @export
-heterogeneity <- function(data, statistic = c("cv", "dropout", "gini", "inequality", "bwt", "mean"), normalization = c("none", "bins", "windows"), order_by = log2(rowMeans(data / 10, na.rm = T) + 1), groups = NULL, ...) {
+heterogeneity <- function(data, statistic = c("cv", "dropout", "gini", "inequality", "bwt", "mean"), normalization = c("none", "bins", "windows"), order_by = log2(Matrix::rowMeans(data / 10, na.rm = T) + 1), groups = NULL, ...) {
   # Transform the data based on the statistic given
   stat <- match.arg(statistic)
   transformed_data <- switch(stat,

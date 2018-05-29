@@ -13,6 +13,7 @@ Imports:
     graphics,
     grDevices,
     lattice,
+    Matrix,
     methods,
     stats,
     utils,
@@ -35,5 +36,5 @@ Imports:
     SummarizedExperiment,
     SingleCellExperiment,
     scater,
-    biomaRt,
+    biomaRt
 RoxygenNote: 6.0.1
