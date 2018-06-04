@@ -6,7 +6,7 @@
 \usage{
 calcSOM(object, exprs_values = "norm_TPM", features = NULL, scale = T,
   num_epochs = 200, resolution = 1, seed = NULL, init = NULL,
-  init.FUN = singlecellutils::map.init, ...)
+  init.FUN = map.init, ...)
 }
 \arguments{
 \item{object}{A SingleCellExperiment object.}

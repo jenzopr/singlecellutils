@@ -66,7 +66,7 @@ tSOM <- function(object, som.dots = list(), tsne.dots = list()) {
   tsne_args <- c(list(X = t(som$codes[[1]])), tsne.dots)
   tsne <- do.call(Rtsne::Rtsne, tsne_args)
 
-  return(tnse$Y)
+  return(tsne$Y)
 }
 
 #' Calculates a (weighted) self-organizing map
@@ -178,4 +178,31 @@ map.init.local <- function(data, resolution = 1) {
     gridshape[direct,i] <- gridshape[direct,i] + sum(data[genes, i])
   }
   list(h = h, w = w, initgrid = scale(gridshape))
+}
+
+#' Calculates a 2D QC map of cells based on quality features
+#'
+#' @param object A SingleCellExperiment object.
+#' @param features A character vector with column names form \code{colData(object)} that are used to calculate the map.
+#' @param slot Determines which entry of the \code{reducedDims} slot to use for QC embedding.
+#' @param ... Additional parameters passed onto \code{Rtsne::Rtsne}.
+#'
+#' @return A SingleCellExperiment object with modified \code{reducedDims} slot.
+#'
+#' @export
+calculate_qc_map <- function(object, features, slot = "qcmap", ...) {
+  valid_features <- features %in% colnames(SummarizedExperiment::colData(object))
+
+  if(all(!valid_features)) {
+    stop("None of features is present ib object. Please choose valid column names.")
+  }
+  if(!all(valid_features)) {
+    warning(paste("Not all features are present in object. Using only:", paste(features[valid_features], collapse = ",")))
+  }
+
+  qcdata <- as.matrix(SummarizedExperiment::colData(object)[, features[valid_features]])
+  tsne <- Rtsne::Rtsne(qcdata, ...)
+
+  SingleCellExperiment::reducedDim(object, slot) <- tsne$Y
+  return(object)
 }
