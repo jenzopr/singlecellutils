@@ -8,10 +8,11 @@
 #' @return A SingleCellExperiment object with modified \code{reducedDims} slot.
 #'
 #' @export
-reduce_dimension <- function(object, flavor = c("umap", "som"), slot = flavor, ...) {
+reduce_dimension <- function(object, flavor = c("umap", "som", "som_tsne"), slot = flavor, ...) {
   embedding <- switch(flavor,
     umap = umap(object, ...),
-    som = t(calcSOM(object, ...)$codes[[1]]))
+    som = t(calcSOM(object, ...)$codes[[1]]),
+    som_tsne = tSOM(object, ...))
   SingleCellExperiment::reducedDim(object, slot) <- embedding
   return(object)
 }
@@ -47,6 +48,25 @@ umap <- function(object, exprs_values = 'norm_TPM', features = NULL, scale = T, 
 
   embedding <- umap_cl$fit_transform(t(input))
   return(embedding)
+}
+
+#' Calculates a self-organizing map followed by t-SNE dimension reduction
+#'
+#' @param object A SingleCellExperiment object.
+#' @param som.dots A named list with parameters passed on to \code{calcSOM}.
+#' @param tsne.dots A named list with parameters passed on to \code{Rtsne::Rtsne}.
+#'
+#' @return A matrix with a two-dimensional embedding.
+#'
+#' @export
+tSOM <- function(object, som.dots = list(), tsne.dots = list()) {
+  som_args <- c(list(object = object), som.dots)
+  som <- do.call(calcSOM, som_args)
+
+  tsne_args <- c(list(X = t(som$codes[[1]])), tsne.dots)
+  tsne <- do.call(Rtsne::Rtsne, tsne_args)
+
+  return(tnse$Y)
 }
 
 #' Calculates a (weighted) self-organizing map
