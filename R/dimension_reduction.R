@@ -80,7 +80,7 @@ tSOM <- function(object, som.dots = list(), tsne.dots = list()) {
 #' @param seed A numeric seed to initialize the random number generator.
 #' @param init A list with initialization parameters.
 #' @param init.FUN A function to initialize the map.
-#' @param ... Additional arguments passed to \code{kohonen::som}.
+#' @param ... Additional arguments passed to \code{\link[kohonen]{som}}.
 #'
 #' @return A som object.
 #'
@@ -185,7 +185,7 @@ map.init.local <- function(data, resolution = 1) {
 #' @param object A SingleCellExperiment object.
 #' @param features A character vector with column names form \code{colData(object)} that are used to calculate the map.
 #' @param slot Determines which entry of the \code{reducedDims} slot to use for QC embedding.
-#' @param ... Additional parameters passed onto \code{Rtsne::Rtsne}.
+#' @param ... Additional parameters passed onto \code{\link[Rtsne]{Rtsne}}.
 #'
 #' @return A SingleCellExperiment object with modified \code{reducedDims} slot.
 #'

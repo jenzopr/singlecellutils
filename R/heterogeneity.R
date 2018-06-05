@@ -2,8 +2,8 @@
 #'
 #' @param object A SingleCellExperiment object.
 #' @param exprs_values String indicating which assay contains the data that should be used calculate heterogeneous genes.
-#' @param column Determines the column name of the \code{rowData} slot to store results to.
-#' @param ... Additional parameters passed to \code{heterogeneity}
+#' @param column Determines the column name of the \code{\link{rowData}} slot to store results to.
+#' @param ... Additional parameters passed to \code{\link{heterogeneity}}
 #'
 #' @return A SingleCellExperiment object with modified \code{rowData} slot.
 #'

@@ -66,11 +66,11 @@ FanoOverA <- function(A = 2, na.rm = TRUE) {
   }
 }
 
-#' scaterIsOutlier returns a filter function with bindings for parameters for \code{scater::isOutlier}.
+#' scaterIsOutlier returns a filter function with bindings for parameters for \code{\link[scater]{isOutlier}}.
 #'
-#' @param ... Parameters that will be bound to the \code{scater::isOutlier} code.
+#' @param ... Parameters that will be bound to the \code{\link[scater]{isOutlier}} code.
 #'
-#' @return A function with bindings for ....
+#' @return A function with ... bindings for \code{\link[scater]{isOutlier}}.
 #'
 #' @export
 scaterIsOutlier <- function(...) {
