@@ -97,8 +97,8 @@ n_filterfun <- function (n = 0, ...) {
       fval <- fun(x)
       if (is.na(fval) || !fval)
         fails <- fails + 1
+        if (fails > n) return(FALSE)
     }
-    if (fails > n) return(FALSE)
     return(TRUE)
   }
   return(f)
