@@ -2,16 +2,16 @@
 % Please edit documentation in R/filter.R
 \name{scaterIsOutlier}
 \alias{scaterIsOutlier}
-\title{scaterIsOutlier returns a filter function with bindings for parameters for \code{scater::isOutlier}.}
+\title{scaterIsOutlier returns a filter function with bindings for parameters for \code{\link[scater]{isOutlier}}.}
 \usage{
 scaterIsOutlier(...)
 }
 \arguments{
-\item{...}{Parameters that will be bound to the \code{scater::isOutlier} code.}
+\item{...}{Parameters that will be bound to the \code{\link[scater]{isOutlier}} code.}
 }
 \value{
-A function with bindings for ....
+A function with ... bindings for \code{\link[scater]{isOutlier}}.
 }
 \description{
-scaterIsOutlier returns a filter function with bindings for parameters for \code{scater::isOutlier}.
+scaterIsOutlier returns a filter function with bindings for parameters for \code{\link[scater]{isOutlier}}.
 }

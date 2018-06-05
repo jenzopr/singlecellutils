@@ -13,7 +13,7 @@ calculate_qc_map(object, features, slot = "qcmap", ...)
 
 \item{slot}{Determines which entry of the \code{reducedDims} slot to use for QC embedding.}
 
-\item{...}{Additional parameters passed onto \code{Rtsne::Rtsne}.}
+\item{...}{Additional parameters passed onto \code{\link[Rtsne]{Rtsne}}.}
 }
 \value{
 A SingleCellExperiment object with modified \code{reducedDims} slot.

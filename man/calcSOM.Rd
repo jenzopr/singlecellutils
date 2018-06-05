@@ -27,7 +27,7 @@ calcSOM(object, exprs_values = "norm_TPM", features = NULL, scale = T,
 
 \item{init.FUN}{A function to initialize the map.}
 
-\item{...}{Additional arguments passed to \code{kohonen::som}.}
+\item{...}{Additional arguments passed to \code{\link[kohonen]{som}}.}
 }
 \value{
 A som object.
