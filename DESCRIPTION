@@ -32,7 +32,6 @@ Imports:
     viridis,
     zoo,
     data.table,
-    genefilter,
     SummarizedExperiment,
     SingleCellExperiment,
     scater,
