@@ -49,7 +49,7 @@ umap <- function(object, exprs_values, features = NULL, scale = T, n_neighbors =
     }
   } else {
     if (!is.null(use_dimred)) {
-      input <- as.matrix(SingleCellExperiment::reducedDim(object, type = use_dimred))
+      input <- t(as.matrix(SingleCellExperiment::reducedDim(object, type = use_dimred)))
     } else {
       stop("Both exprs_values and use_dimred can't be NULL.")
     }
