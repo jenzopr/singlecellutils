@@ -36,7 +36,7 @@ reduce_dimension <- function(object, flavor = c("umap", "som", "som_tsne", "svd"
 #' @return A matrix with the two-dimensional embedding.
 #'
 #' @export
-umap <- function(object, exprs_values = 'norm_TPM', features = NULL, scale = T, n_neighbors = 5L, min_dist = 0.1, metric = "correlation", use_dimred = NULL, seed = NULL) {
+umap <- function(object, exprs_values, features = NULL, scale = T, n_neighbors = 5L, min_dist = 0.1, metric = "correlation", use_dimred = NULL, seed = NULL) {
   if (!is.null(seed)) set.seed(seed)
   umap <- reticulate::import("umap")
   np <- reticulate::import("numpy", convert=FALSE)
@@ -49,7 +49,7 @@ umap <- function(object, exprs_values = 'norm_TPM', features = NULL, scale = T, 
     }
   } else {
     if (!is.null(use_dimred)) {
-      input <- as.matrix(SingleCellExperiment::reducedDim(object, i = use_dimred))
+      input <- as.matrix(SingleCellExperiment::reducedDim(object, type = use_dimred))
     } else {
       stop("Both exprs_values and use_dimred can't be NULL.")
     }
