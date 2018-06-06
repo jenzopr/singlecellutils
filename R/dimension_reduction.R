@@ -30,20 +30,29 @@ reduce_dimension <- function(object, flavor = c("umap", "som", "som_tsne", "svd"
 #' @param n_neighbors This determines the number of neighboring points used in local approximations of manifold structure. Larger values will result in more global structure being preserved at the loss of detailed local structure. In general this parameter should often be in the range 5 to 50, with a choice of 10 to 15 being a sensible default.
 #' @param min_dist This controls how tightly the embedding is allowed compress points together. Larger values ensure embedded points are more evenly distributed, while smaller values allow the algorithm to optimise more accurately with regard to local structure. Sensible values are in the range 0.001 to 0.5, with 0.1 being a reasonable default.
 #' @param metric This determines the choice of metric used to measure distance in the input space.
+#' @param use_dimred String indicating which slot in \code{reducedDim} contains the data that should be used to perform UMAP (if \code{exprs_values = NULL}).
 #' @param seed A numeric seed to initialize the random number generator.
 #'
 #' @return A matrix with the two-dimensional embedding.
 #'
 #' @export
-umap <- function(object, exprs_values = 'norm_TPM', features = NULL, scale = T, n_neighbors = 5L, min_dist = 0.1, metric = "correlation", seed = NULL) {
+umap <- function(object, exprs_values = 'norm_TPM', features = NULL, scale = T, n_neighbors = 5L, min_dist = 0.1, metric = "correlation", use_dimred = NULL, seed = NULL) {
   if (!is.null(seed)) set.seed(seed)
   umap <- reticulate::import("umap")
   np <- reticulate::import("numpy", convert=FALSE)
   umap_cl <- umap$UMAP(n_neighbors = as.integer(n_neighbors), min_dist = min_dist, metric = metric)
 
-  input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values))
-  if (!is.null(features)) {
-    input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values)[features,])
+  if (!is.null(exprs_values)) {
+    input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values))
+    if (!is.null(features)) {
+      input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values)[features,])
+    }
+  } else {
+    if (!is.null(use_dimred)) {
+      input <- as.matrix(SingleCellExperiment::reducedDim(object, i = use_dimred))
+    } else {
+      stop("Both exprs_values and use_dimred can't be NULL.")
+    }
   }
   if (scale) input <- t(scale(t(input)))
 

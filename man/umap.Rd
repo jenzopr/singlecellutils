@@ -5,7 +5,8 @@
 \title{Conveinience function to perform UMAP via reticulate.}
 \usage{
 umap(object, exprs_values = "norm_TPM", features = NULL, scale = T,
-  n_neighbors = 5L, min_dist = 0.1, metric = "correlation", seed = NULL)
+  n_neighbors = 5L, min_dist = 0.1, metric = "correlation",
+  use_dimred = NULL, seed = NULL)
 }
 \arguments{
 \item{object}{A SingleCellExperiment object.}
@@ -21,6 +22,8 @@ umap(object, exprs_values = "norm_TPM", features = NULL, scale = T,
 \item{min_dist}{This controls how tightly the embedding is allowed compress points together. Larger values ensure embedded points are more evenly distributed, while smaller values allow the algorithm to optimise more accurately with regard to local structure. Sensible values are in the range 0.001 to 0.5, with 0.1 being a reasonable default.}
 
 \item{metric}{This determines the choice of metric used to measure distance in the input space.}
+
+\item{use_dimred}{String indicating which slot in \code{reducedDim} contains the data that should be used to perform UMAP (if \code{exprs_values = NULL}).}
 
 \item{seed}{A numeric seed to initialize the random number generator.}
 }
