@@ -5,8 +5,8 @@
 \title{Calculates the term frequency-inverse document frequency.}
 \usage{
 tf_idf(object, exprs_values = "counts", features = NULL,
-  tf.method = c("raw", "adjusted", "logscaled", "augmented"),
-  idf.weight = c("unary", "idf", "idf.smooth", "pidf"))
+  tf.method = c("raw", "adjusted", "logscaled"), idf.weight = c("unary",
+  "idf", "idf.smooth", "pidf"))
 }
 \arguments{
 \item{object}{A SingleCellExperiment object.}

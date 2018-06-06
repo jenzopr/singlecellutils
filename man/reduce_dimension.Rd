@@ -4,7 +4,7 @@
 \alias{reduce_dimension}
 \title{Adds results from a particular dimension reduction technique to the object.}
 \usage{
-reduce_dimension(object, flavor = c("umap", "som", "som_tsne"),
+reduce_dimension(object, flavor = c("umap", "som", "som_tsne", "svd"),
   slot = flavor, ...)
 }
 \arguments{

@@ -8,11 +8,12 @@
 #' @return A SingleCellExperiment object with modified \code{reducedDims} slot.
 #'
 #' @export
-reduce_dimension <- function(object, flavor = c("umap", "som", "som_tsne"), slot = flavor, ...) {
+reduce_dimension <- function(object, flavor = c("umap", "som", "som_tsne", "svd"), slot = flavor, ...) {
   embedding <- switch(flavor,
     umap = umap(object, ...),
     som = t(calcSOM(object, ...)$codes[[1]]),
-    som_tsne = tSOM(object, ...))
+    som_tsne = tSOM(object, ...),
+    svd = approx_svd(object, ...))
   SingleCellExperiment::reducedDim(object, slot) <- embedding
   return(object)
 }
@@ -67,6 +68,37 @@ tSOM <- function(object, som.dots = list(), tsne.dots = list()) {
   tsne <- do.call(Rtsne::Rtsne, tsne_args)
 
   return(tsne$Y)
+}
+
+#' Performs SVD
+#'
+#' @param object A SingleCellExperiment object.
+#' @param exprs_values String indicating which assay contains the data that should be used to perform SVD.
+#' @param n_dims The number of approximate singular values to calculate.
+#' @param features A character vector (of feature names), a logical vector or numeric vector (of indices) specifying the features to use for SVD. The default of NULL will use all features.
+#' @param skip A numeric vector indicating which singular values to set to zero.
+#' @param seed A numeric seed to initialize the random number generator.
+#' @param ... Additional arguments passed on to \code{\link[irlba]{irlba}}.
+#'
+#' @return A matrix of dimension \code{ncol(object)} x \code{dims}.
+approx_svd <- function(object, exprs_values, n_dims, features = NULL, skip = NULL, seed = NULL, ...) {
+  if (!is.null(seed)) set.seed(seed)
+
+  input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values))
+  if (!is.null(features)) {
+    input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values)[features,])
+  }
+
+  svd <- irlba::irlba(input, nv = n_dims, nu = n_dims, ...)
+  diag_s <- matrix(0, nrow = n_dims, ncol = n_dims)
+  diag(diag_s) = svd$d
+
+  if (!is.null(skip)) {
+    diag_s[skip,skip] <- 0
+  }
+
+  # return S %*% t(V)
+  t(diag_s %*% t(svd$v))
 }
 
 #' Calculates a (weighted) self-organizing map
