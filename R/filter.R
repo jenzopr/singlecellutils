@@ -1,4 +1,4 @@
-#' Conveinience function to perform gene filtering using \code{genefilter}.
+#' Conveinience function to perform feature filtering using \code{genefilter}.
 #'
 #' @param object A SingleCellExperiment object.
 #' @param flist A named list with gene filters. Names should be callable functions, list items should be named paramters.
@@ -8,27 +8,29 @@
 #' @return A SingleCellExperiment object with features passing the filter(s).
 #'
 #' @export
-filter_genes <- function(object, flist, exprs_values = "counts", tolerate = 0) {
+filter_features <- function(object, flist, exprs_values = "counts", tolerate = 0) {
   filter_functions <- construct_filters(flist)
 
   keep <- apply(SummarizedExperiment::assay(object, i = exprs_values), 1, n_filterfun(n = tolerate, filter_functions))
+  SingleCellExperiment:::int_metadata(object)$feature_filter <- flist
   return(object[keep, ])
 }
 
-#' Conveinience function to perform cell filtering using \code{genefilter}.
+#' Conveinience function to perform sample filtering using \code{genefilter}.
 #'
 #' @param object A SingleCellExperiment object.
 #' @param flist A named list with gene filters. Names should be callable functions, list items should be named paramters.
 #' @param exprs_values String indicating which assay contains the data that should be used for filtering.
 #' @param tolerate A number indicating how many failed filters should be toleated.
 #'
-#' @return A SingleCellExperiment object with cells passing the filter(s).
+#' @return A SingleCellExperiment object with samples passing the filter(s).
 #'
 #' @export
-filter_cells <- function(object, flist, exprs_values = "counts", tolerate = 0) {
+filter_samples <- function(object, flist, exprs_values = "counts", tolerate = 0) {
   filter_functions <- construct_filters(flist)
 
   keep <- apply(t(SummarizedExperiment::assay(object, i = exprs_values)), 1, n_filterfun(n = tolerate, filter_functions))
+  SingleCellExperiment:::int_metadata(object)$sample_filter <- flist
   return(object[, keep])
 }
 

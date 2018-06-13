@@ -4,9 +4,9 @@
 \alias{umap}
 \title{Conveinience function to perform UMAP via reticulate.}
 \usage{
-umap(object, exprs_values = "norm_TPM", features = NULL, scale = T,
-  n_neighbors = 5L, min_dist = 0.1, metric = "correlation",
-  use_dimred = NULL, seed = NULL)
+umap(object, exprs_values, features = NULL, scale = T, n_neighbors = 5L,
+  min_dist = 0.1, metric = "correlation", use_dimred = NULL,
+  seed = NULL)
 }
 \arguments{
 \item{object}{A SingleCellExperiment object.}
