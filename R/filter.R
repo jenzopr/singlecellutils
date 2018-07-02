@@ -68,6 +68,38 @@ FanoOverA <- function(A = 2, na.rm = TRUE) {
   }
 }
 
+#' MeanBelowA returns a filter function with bindings for A. This function evaluates to TRUE if the mean of the arguments elements are smaller than A.
+#'
+#' @param A The value you do not want to exceed.
+#' @param na.rm Whether NAs should be removed.
+#'
+#' @return A function with bindings for A.
+#'
+#' @export
+MeanBelowA <- function(A = 4, na.rm = TRUE) {
+  function(x) {
+    if (na.rm)
+      x <- x[!is.na(x)]
+    mean(x) < A
+  }
+}
+
+#' MeanOverA returns a filter function with bindings for A. This function evaluates to TRUE if the mean of the arguments elements are greater than A.
+#'
+#' @param A The value you want to exceed.
+#' @param na.rm Whether NAs should be removed.
+#'
+#' @return A function with bindings for A.
+#'
+#' @export
+MeanOverA <- function(A = 4, na.rm = TRUE) {
+  function(x) {
+    if (na.rm)
+      x <- x[!is.na(x)]
+    mean(x) > A
+  }
+}
+
 #' scaterIsOutlier returns a filter function with bindings for parameters for \code{\link[scater]{isOutlier}}.
 #'
 #' @param ... Parameters that will be bound to the \code{\link[scater]{isOutlier}} code.
