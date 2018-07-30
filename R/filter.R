@@ -113,6 +113,36 @@ scaterIsOutlier <- function(...) {
   }
 }
 
+#' Convenience function to discover elements in \code{what} in a vector \code{where} using a function \code{FUN}.
+#'
+#' @param object A SingleCellExperiment object.
+#' @param what A character vector/character with what to find
+#' @param where Where to search the object
+#' @param FUN Function name used to perform the search
+#' @param column Column name to search in (if rowData or colData should be searched).
+#'
+#' @return A list with TRUE/FALSE
+#'
+#' @export
+discover_element <- function(object, what, where = c("rownames", "colnames", "rowData", "colData"), FUN = c("grepl", "is_in"), column = NULL) {
+  if(length(where) == 1) {
+    x <- switch(where,
+                rownames = rownames(object),
+                colnames = colnames(object),
+                rowData = SummarizedExperiment::rowData(object)[, column],
+                colData = SummarizedExperiment::colData(object)[, column],
+                where)
+  } else {
+    x <- where
+  }
+
+  fn <- switch(FUN,
+               grepl = get("grepl", envir = asNamespace("base"), mode = "function"),
+               is_in = get("is_in", envir = asNamespace("magrittr"), mode = "function"))
+  args <- list(what, x)
+  do.call(what = fn, args = args)
+}
+
 #' A custom \code{filterfun} that creates a n-FALSE exiting function from its input.
 #'
 #' @param n The number of tolerated FALSE exiting functions before the returned function returns FALSE. The behaviour of the default (n=0) resembles \code{\link[genefilter]{filterfun}}.
