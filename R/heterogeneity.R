@@ -10,7 +10,12 @@
 #' @export
 add_heterogeneity <- function(object, exprs_values = "counts", column = ".heterogeneity", ...) {
   het <- heterogeneity(SummarizedExperiment::assay(object, i = exprs_values), ...)
-  object <- scater::mutate(object, !!column := het)
+
+  rd <- as.data.frame(SummarizedExperiment::rowData(object))
+  rd <- dplyr::mutate(rd, !!column := het)
+
+  rownames(rd) <- rownames(object)
+  SummarizedExperiment::rowData(object) <- S4Vectors::DataFrame(rd)
   return(object)
 }
 
