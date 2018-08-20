@@ -34,6 +34,21 @@ cv2.fun <- function(x) {
   stats::var(x) / mean(x)^2
 }
 
+#' Calculates the Fano factor
+#'
+#' @param x The vector of values
+#'
+#' @return The index of dispersion for x
+#'
+#' @export
+fano.fun <- function(x) {
+  x <- x[!is.na(x)]
+  if (mean(x) == 0) {
+    return(0)
+  }
+  stats::var(x) / mean(x)
+}
+
 #' Calculates the drouput percentage
 #'
 #' @param x The vector of values
@@ -95,12 +110,13 @@ bw.inequality.fun <- function(x, g) {
 #' @return The statistics value for each observation.
 #'
 #' @export
-heterogeneity <- function(data, statistic = c("cv", "dropout", "gini", "inequality", "bwt", "mean"), normalization = c("none", "bins", "windows"), order_by = log2(Matrix::rowMeans(data / 10, na.rm = T) + 1), groups = NULL, ...) {
+heterogeneity <- function(data, statistic = c("cv", "dropout", "fano", "gini", "inequality", "bwt", "mean"), normalization = c("none", "bins", "windows"), order_by = log2(Matrix::rowMeans(data / 10, na.rm = T) + 1), groups = NULL, ...) {
   # Transform the data based on the statistic given
   stat <- match.arg(statistic)
   transformed_data <- switch(stat,
                              cv = apply(data, 1, cv2.fun),
                              dropout = apply(data, 1, dropout.fun),
+                             fano = apply(data, 1, fano.fun),
                              mean = log(rowMeans(data))/log(10),
                              gini = apply(data, 1, gini.fun),
                              inequality = apply(data, 1, inequality.fun),

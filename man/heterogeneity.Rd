@@ -4,8 +4,8 @@
 \alias{heterogeneity}
 \title{Calculates various heterogeneity statistics}
 \usage{
-heterogeneity(data, statistic = c("cv", "dropout", "gini", "inequality",
-  "bwt", "mean"), normalization = c("none", "bins", "windows"),
+heterogeneity(data, statistic = c("cv", "dropout", "fano", "gini",
+  "inequality", "bwt", "mean"), normalization = c("none", "bins", "windows"),
   order_by = log2(Matrix::rowMeans(data/10, na.rm = T) + 1), groups = NULL,
   ...)
 }
