@@ -8,12 +8,13 @@
 #' @return A SingleCellExperiment object with modified \code{reducedDims} slot.
 #'
 #' @export
-reduce_dimension <- function(object, flavor = c("umap", "som", "som_tsne", "svd"), slot = flavor, ...) {
+reduce_dimension <- function(object, flavor = c("umap", "som", "som_tsne", "svd", "isomds"), slot = flavor, ...) {
   embedding <- switch(flavor,
     umap = umap(object, ...),
     som = t(calcSOM(object, ...)$codes[[1]]),
     som_tsne = tSOM(object, ...),
-    svd = approx_svd(object, ...))
+    svd = approx_svd(object, ...),
+    isomds = isomds(object, ...))
   SingleCellExperiment::reducedDim(object, slot) <- embedding
   return(object)
 }
@@ -58,6 +59,27 @@ umap <- function(object, exprs_values, features = NULL, scale = T, n_neighbors =
 
   embedding <- umap_cl$fit_transform(t(input))
   return(embedding)
+}
+
+#' Conveinience function to run isoMDS on a SingleCellExperiment object.
+#'
+#' @param object A SingleCellExperiment object.
+#' @param exprs_values String indicating which assay contains the data that should be used to perform isoMDS.
+#' @param features A character vector (of feature names), a logical vector or numeric vector (of indices) specifying the features to use for isoMDS. The default of NULL will use all features.
+#' @param method A character string specifying the method to be used to calulate a dissimilarity structure using WGCNA::cor.
+#' @param ... Additional parameters to be passed on to MASS::isoMDS.
+#'
+#' @return A matrix with the k-dimensional embedding.
+#'
+#' @export
+isomds <- function(object, exprs_values, features = NULL, method = "spearman", ...) {
+  input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values))
+  if (!is.null(features)) {
+    input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values)[features,])
+  }
+
+  dissimilarity <- (1 - WGCNA::cor(input, method = method))
+  return(MASS::isoMDS(dissimilarity, ...)$points)
 }
 
 #' Calculates a self-organizing map followed by t-SNE dimension reduction

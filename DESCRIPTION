@@ -37,5 +37,6 @@ Imports:
     scater,
     biomaRt,
     Rtsne,
-    irlba
+    irlba,
+    WGCNA
 RoxygenNote: 6.0.1

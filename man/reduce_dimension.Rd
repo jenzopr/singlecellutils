@@ -4,8 +4,8 @@
 \alias{reduce_dimension}
 \title{Adds results from a particular dimension reduction technique to the object.}
 \usage{
-reduce_dimension(object, flavor = c("umap", "som", "som_tsne", "svd"),
-  slot = flavor, ...)
+reduce_dimension(object, flavor = c("umap", "som", "som_tsne", "svd",
+  "isomds"), slot = flavor, ...)
 }
 \arguments{
 \item{object}{A SingleCellExperiment object.}
