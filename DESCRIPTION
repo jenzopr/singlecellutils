@@ -38,5 +38,6 @@ Imports:
     biomaRt,
     Rtsne,
     irlba,
-    WGCNA
+    WGCNA,
+    rsvd
 RoxygenNote: 6.0.1
