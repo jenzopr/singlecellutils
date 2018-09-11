@@ -4,7 +4,7 @@
 \alias{plotSilhouette}
 \title{Plots a silhouette plot}
 \usage{
-plotSilhouette(object, use_dimred, clusters)
+plotSilhouette(object, use_dimred, clusters, na.rm = TRUE)
 }
 \arguments{
 \item{object}{A SinglecellExperiment object.}
@@ -12,6 +12,8 @@ plotSilhouette(object, use_dimred, clusters)
 \item{use_dimred}{A character string indicating which dimension reduction to use.}
 
 \item{clusters}{A character string indicating which annotation to use as clusters.}
+
+\item{na.rm}{Remove NA values from clusters.}
 }
 \value{
 A ggplot object

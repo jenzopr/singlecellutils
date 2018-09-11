@@ -271,12 +271,13 @@ hvg.plot <- function(data, hvg.fit, n = 500) {
 #' @param object A SinglecellExperiment object.
 #' @param use_dimred A character string indicating which dimension reduction to use.
 #' @param clusters A character string indicating which annotation to use as clusters.
+#' @param na.rm Remove NA values from clusters.
 #'
 #' @return A ggplot object
 #'
 #' @importFrom rlang .data
 #' @export
-plotSilhouette <- function(object, use_dimred, clusters) {
+plotSilhouette <- function(object, use_dimred, clusters, na.rm = TRUE) {
   if ( !methods::is(object, "SingleCellExperiment") ) {
     stop("Object must be of class SingleCellExperiment")
   }
@@ -295,11 +296,17 @@ plotSilhouette <- function(object, use_dimred, clusters) {
     cl <- SummarizedExperiment::colData(object)[, clusters]
   }
 
+  if (na.rm) {
+    object <- object[, !is.na(cl)]
+    cl <- cl[!is.na(cl)]
+  }
+
   s <- cluster::silhouette(as.numeric(cl), dist = stats::dist(SingleCellExperiment::reducedDim(object, use_dimred)))
-  df <- data.frame(cell = factor(colnames(object), levels = colnames(object)), silhouette = s[, "sil_width"], cluster = factor(s[,"cluster"]))
+  df <- data.frame(cell = factor(colnames(object), levels = colnames(object)), silhouette = s[, "sil_width"], cluster = factor(s[,"cluster"], levels = unique(cl[order(cl)]), ordered = T))
+
+  df$cell <- factor(df$cell, levels = df$cell[order(df$cluster, df$silhouette)])
 
   ggplot2::ggplot(data = df, ggplot2::aes(.data$cell, .data$silhouette, color = .data$cluster, fill = .data$cluster)) +
     ggplot2::geom_bar(stat = "identity", position = "dodge") +
-    ggplot2::coord_flip() +
-    ggplot2::scale_color_brewer(palette = "Dark2")
+    ggplot2::coord_flip()
 }
