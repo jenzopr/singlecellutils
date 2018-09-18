@@ -108,11 +108,11 @@ tSOM <- function(object, som.dots = list(), tsne.dots = list()) {
 #' @param exprs_values String indicating which assay contains the data that should be used to perform SVD.
 #' @param n_dims The number of approximate singular values to calculate.
 #' @param features A character vector (of feature names), a logical vector or numeric vector (of indices) specifying the features to use for SVD. The default of NULL will use all features.
-#' @param skip A numeric vector indicating which singular values to set to zero.
+#' @param skip A numeric vector indicating which singular values to set to zero (and remove).
 #' @param seed A numeric seed to initialize the random number generator.
 #' @param ... Additional arguments passed on to \code{\link[rsvd]{rsvd}}.
 #'
-#' @return A matrix of dimension \code{ncol(object)} x \code{dims}.
+#' @return A matrix of dimension \code{ncol(object)} x \code{dims - length(skip)}.
 randomized_svd <- function(object, exprs_values, n_dims, features = NULL, skip = NULL, seed = NULL, ...) {
   if (!is.null(seed)) set.seed(seed)
 
@@ -130,7 +130,7 @@ randomized_svd <- function(object, exprs_values, n_dims, features = NULL, skip =
   }
 
   # return S %*% t(V)
-  t(diag_s %*% t(svd$v))
+  t(diag_s %*% t(svd$v))[, -skip]
 }
 
 #' Performs approximate SVD
@@ -139,11 +139,11 @@ randomized_svd <- function(object, exprs_values, n_dims, features = NULL, skip =
 #' @param exprs_values String indicating which assay contains the data that should be used to perform SVD.
 #' @param n_dims The number of approximate singular values to calculate.
 #' @param features A character vector (of feature names), a logical vector or numeric vector (of indices) specifying the features to use for SVD. The default of NULL will use all features.
-#' @param skip A numeric vector indicating which singular values to set to zero.
+#' @param skip A numeric vector indicating which singular values to set to zero (and remove).
 #' @param seed A numeric seed to initialize the random number generator.
 #' @param ... Additional arguments passed on to \code{\link[irlba]{irlba}}.
 #'
-#' @return A matrix of dimension \code{ncol(object)} x \code{dims}.
+#' @return A matrix of dimension \code{ncol(object)} x \code{dims - length(skip)}.
 approx_svd <- function(object, exprs_values, n_dims, features = NULL, skip = NULL, seed = NULL, ...) {
   if (!is.null(seed)) set.seed(seed)
 
@@ -161,7 +161,7 @@ approx_svd <- function(object, exprs_values, n_dims, features = NULL, skip = NUL
   }
 
   # return S %*% t(V)
-  t(diag_s %*% t(svd$v))
+  t(diag_s %*% t(svd$v))[, -skip]
 }
 
 #' Calculates a (weighted) self-organizing map

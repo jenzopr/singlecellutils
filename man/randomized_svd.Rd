@@ -16,14 +16,14 @@ randomized_svd(object, exprs_values, n_dims, features = NULL, skip = NULL,
 
 \item{features}{A character vector (of feature names), a logical vector or numeric vector (of indices) specifying the features to use for SVD. The default of NULL will use all features.}
 
-\item{skip}{A numeric vector indicating which singular values to set to zero.}
+\item{skip}{A numeric vector indicating which singular values to set to zero (and remove).}
 
 \item{seed}{A numeric seed to initialize the random number generator.}
 
 \item{...}{Additional arguments passed on to \code{\link[rsvd]{rsvd}}.}
 }
 \value{
-A matrix of dimension \code{ncol(object)} x \code{dims}.
+A matrix of dimension \code{ncol(object)} x \code{dims - length(skip)}.
 }
 \description{
 Performs randomized SVD
