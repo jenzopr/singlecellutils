@@ -113,6 +113,8 @@ tSOM <- function(object, som.dots = list(), tsne.dots = list()) {
 #' @param ... Additional arguments passed on to \code{\link[rsvd]{rsvd}}.
 #'
 #' @return A matrix of dimension \code{ncol(object)} x \code{dims - length(skip)}.
+#'
+#' @export
 randomized_svd <- function(object, exprs_values, n_dims, features = NULL, skip = NULL, seed = NULL, ...) {
   if (!is.null(seed)) set.seed(seed)
 
@@ -127,10 +129,11 @@ randomized_svd <- function(object, exprs_values, n_dims, features = NULL, skip =
 
   if (!is.null(skip)) {
     diag_s[skip,skip] <- 0
+    t(diag_s %*% t(svd$v))[, -skip]
+  } else {
+    # return S %*% t(V)
+    t(diag_s %*% t(svd$v))
   }
-
-  # return S %*% t(V)
-  t(diag_s %*% t(svd$v))[, -skip]
 }
 
 #' Performs approximate SVD
