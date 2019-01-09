@@ -34,10 +34,12 @@ In case several filters are given, the filter functions allow to tolerate up to 
 # Keep only features with an aggregated expression above 1000 counts.
 obj <- filter_features(obj, list("EpOverA" = list(A = 1000)))
 
-# Keep only features with an aggregated expression above 1000 counts and expression in at least in 10 samples.
+# Keep only features with an aggregated expression above 1000 counts and expression
+# in at least in 10 samples.
 obj <- filter_features(obj, list("EpOverA" = list(A = 1000), "genefilter::kOverA" = list(k=10, A=0)))
 
-# Keep only features with an aggregated expression above 1000 counts or expression in at least in 10 samples (tolerate one being not met).
+# Keep only features with an aggregated expression above 1000 counts or expression
+# in at least in 10 samples (tolerate one being not met).
 obj <- filter_features(obj, list("EpOverA" = list(A = 1000), "genefilter::kOverA" = list(k=10, A=0)), tolerate = 1)
 
 # Keep only features with expression over 10 in at least 5 samples, using the fpkm assay.

@@ -24,7 +24,8 @@
 #' obj <- reduce_dimension(obj, flavor = "umap", slot = "dimred_umap", exprs_values = "norm_exprs")
 #'
 #' # Apply randomized SVD on normalized expression values, keeping 50 dimensions, followed by umap.
-#' # Using magrittr pipes, the result of randomized SVD is stored in the rsvd slot and picked up by umap.
+#' # Using magrittr pipes, the result of randomized SVD is stored in the rsvd slot and
+#' # picked up by umap.
 #' obj %<>%
 #'   reduce_dimension(flavor = "rsvd", exprs_values = "norm_exprs", n_dims = 50) %>%
 #'   reduce_dimension(flavor = "umap", exprs_values = NULL, use_dimred = "rsvd")
@@ -33,7 +34,7 @@
 reduce_dimension <- function(object, flavor = c("umap", "som", "asvd", "isomds", "rsvd"), slot = flavor, ...) {
   embedding <- switch(flavor,
     umap = umap(object, ...),
-    som = t(calcSOM(object, ...)$codes[[1]]),
+    som = t(scSOM(object, ...)$codes[[1]]),
     asvd = approximate_svd(object, ...),
     isomds = isomds(object, ...),
     rsvd = randomized_svd(object, ...))
@@ -183,7 +184,7 @@ approximate_svd <- function(object, exprs_values, n_dims, features = NULL, skip 
 #' @return A som object.
 #'
 #' @export
-calcSOM <- function(object, exprs_values = 'norm_TPM', features = NULL, scale = T, num_epochs = 200, resolution = 1, seed = NULL, init = NULL, init.FUN = map.init, ...) {
+scSOM <- function(object, exprs_values = 'norm_TPM', features = NULL, scale = T, num_epochs = 200, resolution = 1, seed = NULL, init = NULL, init.FUN = map.init, ...) {
   if (!is.null(features)) {
     input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values)[features, ])
   } else {
@@ -276,6 +277,66 @@ map.init.local <- function(data, resolution = 1) {
     gridshape[direct,i] <- gridshape[direct,i] + sum(data[genes, i])
   }
   list(h = h, w = w, initgrid = scale(gridshape))
+}
+
+#' Construct the neighborhood of a hexagonal r*q matrix
+#'
+#' @param r The number of rows
+#' @param q The number of columns
+#' @param even.layout Whether the layout is even
+#'
+#' @return A list of length n*q with their neighbors on the grid.
+constructHexNeighborhood <- function(r, q, even.layout = T) {
+  if (!is.logical(even.layout)) {
+    stop("even.layout has to be logical!")
+  }
+  n <- r * q
+
+
+  nl <- lapply(1:n, function(i) {
+    row <- ceiling(i / q) - 1
+    is_even_row <- ifelse(row %% 2 == 0, T, F)
+
+    e <- i + 1
+    w <- i - 1
+
+    if (even.layout & is_even_row) {
+      ne <- i + q + 1
+      nw <- i + q
+      se <- i - q + 1
+      sw <- i - q
+    }
+    if (even.layout & !is_even_row) {
+      ne <- i + q
+      nw <- i + q - 1
+      se <- i - q
+      sw <- i - q - 1
+    }
+    if (!even.layout & is_even_row) {
+      ne <- i + q
+      nw <- i + q - 1
+      se <- i - q
+      sw <- i - q - 1
+    }
+    if (!even.layout & !is_even_row) {
+      ne <- i + q + 1
+      nw <- i + q
+      se <- i - q + 1
+      sw <- i - q
+    }
+    dir <- c(ne, e, se, sw, w, nw)
+    dir[dir < 0] <- 0
+    dir[dir > n] <- 0
+    # Cell is on the right border
+    if (i %% q == 0) {
+      dir[dir %% q == 1] <- 0
+    }
+    else {
+      dir[dir %% q == 0] <- 0
+    }
+    return(dir[dir != 0])
+  })
+  return(nl)
 }
 
 #' Calculates a 2D QC map of cells based on quality features

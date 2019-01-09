@@ -38,7 +38,8 @@ The following dimension reduction techniques are available:
 obj <- reduce_dimension(obj, flavor = "umap", slot = "dimred_umap", exprs_values = "norm_exprs")
 
 # Apply randomized SVD on normalized expression values, keeping 50 dimensions, followed by umap.
-# Using magrittr pipes, the result of randomized SVD is stored in the rsvd slot and picked up by umap.
+# Using magrittr pipes, the result of randomized SVD is stored in the rsvd slot and
+# picked up by umap.
 obj \%<>\%
   reduce_dimension(flavor = "rsvd", exprs_values = "norm_exprs", n_dims = 50) \%>\%
   reduce_dimension(flavor = "umap", exprs_values = NULL, use_dimred = "rsvd")
