@@ -2,23 +2,45 @@
 % Please edit documentation in R/dimension_reduction.R
 \name{reduce_dimension}
 \alias{reduce_dimension}
-\title{Adds results from a particular dimension reduction technique to the object.}
+\title{Performs dimension reduction and adds results to the given input.}
 \usage{
-reduce_dimension(object, flavor = c("umap", "som", "som_tsne", "svd",
-  "isomds", "rsvd"), slot = flavor, ...)
+reduce_dimension(object, flavor = c("umap", "som", "asvd", "isomds", "rsvd"),
+  slot = flavor, ...)
 }
 \arguments{
-\item{object}{A SingleCellExperiment object.}
+\item{object}{A \code{\link[SingleCellExperiment]{SingleCellExperiment}} object.}
 
 \item{flavor}{Determines which dimension reduction technique to apply.}
 
-\item{slot}{Determines which entry of the \code{reducedDims} slot to use for reduced embedding.}
+\item{slot}{Determines which entry of the \code{\link[SingleCellExperiment]{reducedDims}} slot to use for reduced embedding.}
 
 \item{...}{Additional parameters passed to functions.}
 }
 \value{
-A SingleCellExperiment object with modified \code{reducedDims} slot.
+A \code{\link[SingleCellExperiment]{SingleCellExperiment}} object with modified \code{reducedDims} slot.
 }
 \description{
-Adds results from a particular dimension reduction technique to the object.
+See details for available dimension reduction techniques that can be applied to the object.
+}
+\details{
+The following dimension reduction techniques are available:
+\itemize{
+\item \emph{UMAP} - Uniform Manifold Approximation and Projection, see \link{umap}.
+\item \emph{approximate SVD} - see \link{approximate_svd}
+\item \emph{randomized SVD} - see \link{randomized_svd}
+\item \emph{Multidimensional scaling} - see \link{isomds}
+\item \emph{Self-organizing maps} - see \link{scSOM}
+}
+}
+\examples{
+\dontrun{
+# Apply UMAP on normalized expression values, but store results in a slot called dimred_umap.
+obj <- reduce_dimension(obj, flavor = "umap", slot = "dimred_umap", exprs_values = "norm_exprs")
+
+# Apply randomized SVD on normalized expression values, keeping 50 dimensions, followed by umap.
+# Using magrittr pipes, the result of randomized SVD is stored in the rsvd slot and picked up by umap.
+obj \%<>\%
+  reduce_dimension(flavor = "rsvd", exprs_values = "norm_exprs", n_dims = 50) \%>\%
+  reduce_dimension(flavor = "umap", exprs_values = NULL, use_dimred = "rsvd")
+}
 }

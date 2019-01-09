@@ -1,19 +1,40 @@
-#' Adds results from a particular dimension reduction technique to the object.
+#' Performs dimension reduction and adds results to the given input.
 #'
-#' @param object A SingleCellExperiment object.
+#' See details for available dimension reduction techniques that can be applied to the object.
+#'
+#' The following dimension reduction techniques are available:
+#' \itemize{
+#' \item \emph{UMAP} - Uniform Manifold Approximation and Projection, see \link{umap}.
+#' \item \emph{approximate SVD} - see \link{approximate_svd}
+#' \item \emph{randomized SVD} - see \link{randomized_svd}
+#' \item \emph{Multidimensional scaling} - see \link{isomds}
+#' \item \emph{Self-organizing maps} - see \link{scSOM}
+#' }
+#'
+#' @param object A \code{\link[SingleCellExperiment]{SingleCellExperiment}} object.
 #' @param flavor Determines which dimension reduction technique to apply.
-#' @param slot Determines which entry of the \code{reducedDims} slot to use for reduced embedding.
+#' @param slot Determines which entry of the \code{\link[SingleCellExperiment]{reducedDims}} slot to use for reduced embedding.
 #' @param ... Additional parameters passed to functions.
 #'
-#' @return A SingleCellExperiment object with modified \code{reducedDims} slot.
+#' @return A \code{\link[SingleCellExperiment]{SingleCellExperiment}} object with modified \code{reducedDims} slot.
 #'
+#' @examples
+#' \dontrun{
+#' # Apply UMAP on normalized expression values, but store results in a slot called dimred_umap.
+#' obj <- reduce_dimension(obj, flavor = "umap", slot = "dimred_umap", exprs_values = "norm_exprs")
+#'
+#' # Apply randomized SVD on normalized expression values, keeping 50 dimensions, followed by umap.
+#' # Using magrittr pipes, the result of randomized SVD is stored in the rsvd slot and picked up by umap.
+#' obj %<>%
+#'   reduce_dimension(flavor = "rsvd", exprs_values = "norm_exprs", n_dims = 50) %>%
+#'   reduce_dimension(flavor = "umap", exprs_values = NULL, use_dimred = "rsvd")
+#' }
 #' @export
-reduce_dimension <- function(object, flavor = c("umap", "som", "som_tsne", "svd", "isomds", "rsvd"), slot = flavor, ...) {
+reduce_dimension <- function(object, flavor = c("umap", "som", "asvd", "isomds", "rsvd"), slot = flavor, ...) {
   embedding <- switch(flavor,
     umap = umap(object, ...),
     som = t(calcSOM(object, ...)$codes[[1]]),
-    som_tsne = tSOM(object, ...),
-    svd = approx_svd(object, ...),
+    asvd = approximate_svd(object, ...),
     isomds = isomds(object, ...),
     rsvd = randomized_svd(object, ...))
   SingleCellExperiment::reducedDim(object, slot) <- embedding
@@ -23,7 +44,7 @@ reduce_dimension <- function(object, flavor = c("umap", "som", "som_tsne", "svd"
 #' Conveinience function to perform UMAP via reticulate.
 #'
 #' Performs Uniform Manifold Approximation and Projection (UMAP) on a SingleCellExperiment object.
-#' The algorithm is explained in detail in https://arxiv.org/abs/1802.03426 and needs the python packages umap and numpy installed.
+#' The algorithm is explained in detail in \href{https://arxiv.org/abs/1802.03426}{McInnes et. al.} and requires the python packages \href{https://pypi.org/project/umap-learn/}{umap-learn} and \href{https://pypi.org/project/numpy/}{numpy} to be installed.
 #'
 #' @param object A SingleCellExperiment object.
 #' @param exprs_values String indicating which assay contains the data that should be used to perform UMAP.
@@ -83,26 +104,9 @@ isomds <- function(object, exprs_values, features = NULL, method = "spearman", .
   return(MASS::isoMDS(dissimilarity, ...)$points)
 }
 
-#' Calculates a self-organizing map followed by t-SNE dimension reduction
+#' Approximate or randomized singular value decomposition
 #'
-#' @param object A SingleCellExperiment object.
-#' @param som.dots A named list with parameters passed on to \code{calcSOM}.
-#' @param tsne.dots A named list with parameters passed on to \code{Rtsne::Rtsne}.
-#'
-#' @return A matrix with a two-dimensional embedding.
-#'
-#' @export
-tSOM <- function(object, som.dots = list(), tsne.dots = list()) {
-  som_args <- c(list(object = object), som.dots)
-  som <- do.call(calcSOM, som_args)
-
-  tsne_args <- c(list(X = t(som$codes[[1]])), tsne.dots)
-  tsne <- do.call(Rtsne::Rtsne, tsne_args)
-
-  return(tsne$Y)
-}
-
-#' Performs randomized SVD
+#' Approximate SVD is performed using the implementation from \code{\link[irlba]{irlba}}, randomized SVD is performed using the implementation from \code{\link[rsvd]{rsvd}}.
 #'
 #' @param object A SingleCellExperiment object.
 #' @param exprs_values String indicating which assay contains the data that should be used to perform SVD.
@@ -110,10 +114,14 @@ tSOM <- function(object, som.dots = list(), tsne.dots = list()) {
 #' @param features A character vector (of feature names), a logical vector or numeric vector (of indices) specifying the features to use for SVD. The default of NULL will use all features.
 #' @param skip A numeric vector indicating which singular values to set to zero (and remove).
 #' @param seed A numeric seed to initialize the random number generator.
-#' @param ... Additional arguments passed on to \code{\link[rsvd]{rsvd}}.
+#' @param ... Additional arguments passed on to \code{\link[rsvd]{rsvd}} or \code{\link[irlba]{irlba}}.
 #'
-#' @return A matrix of dimension \code{ncol(object)} x \code{dims - length(skip)}.
-#'
+#' @return A matrix of dimension \code{ncol(object)} x \code{dims(object) - length(skip)}.
+#' @name svd
+NULL
+#> NULL
+
+#' @rdname svd
 #' @export
 randomized_svd <- function(object, exprs_values, n_dims, features = NULL, skip = NULL, seed = NULL, ...) {
   if (!is.null(seed)) set.seed(seed)
@@ -136,18 +144,9 @@ randomized_svd <- function(object, exprs_values, n_dims, features = NULL, skip =
   }
 }
 
-#' Performs approximate SVD
-#'
-#' @param object A SingleCellExperiment object.
-#' @param exprs_values String indicating which assay contains the data that should be used to perform SVD.
-#' @param n_dims The number of approximate singular values to calculate.
-#' @param features A character vector (of feature names), a logical vector or numeric vector (of indices) specifying the features to use for SVD. The default of NULL will use all features.
-#' @param skip A numeric vector indicating which singular values to set to zero (and remove).
-#' @param seed A numeric seed to initialize the random number generator.
-#' @param ... Additional arguments passed on to \code{\link[irlba]{irlba}}.
-#'
-#' @return A matrix of dimension \code{ncol(object)} x \code{dims - length(skip)}.
-approx_svd <- function(object, exprs_values, n_dims, features = NULL, skip = NULL, seed = NULL, ...) {
+#' @rdname svd
+#' @export
+approximate_svd <- function(object, exprs_values, n_dims, features = NULL, skip = NULL, seed = NULL, ...) {
   if (!is.null(seed)) set.seed(seed)
 
   input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values))
@@ -161,10 +160,11 @@ approx_svd <- function(object, exprs_values, n_dims, features = NULL, skip = NUL
 
   if (!is.null(skip)) {
     diag_s[skip,skip] <- 0
+    t(diag_s %*% t(svd$v))[, -skip]
+  } else {
+    # return S %*% t(V)
+    t(diag_s %*% t(svd$v))
   }
-
-  # return S %*% t(V)
-  t(diag_s %*% t(svd$v))[, -skip]
 }
 
 #' Calculates a (weighted) self-organizing map

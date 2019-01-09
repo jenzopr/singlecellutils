@@ -2,7 +2,7 @@
 % Please edit documentation in R/filter.R
 \name{scaterIsOutlier}
 \alias{scaterIsOutlier}
-\title{scaterIsOutlier returns a filter function with bindings for parameters for \code{\link[scater]{isOutlier}}.}
+\title{A filter function with bindings for parameters for \code{\link[scater]{isOutlier}}.}
 \usage{
 scaterIsOutlier(...)
 }
@@ -13,5 +13,5 @@ scaterIsOutlier(...)
 A function with ... bindings for \code{\link[scater]{isOutlier}}.
 }
 \description{
-scaterIsOutlier returns a filter function with bindings for parameters for \code{\link[scater]{isOutlier}}.
+A filter function with bindings for parameters for \code{\link[scater]{isOutlier}}.
 }

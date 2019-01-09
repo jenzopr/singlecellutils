@@ -1,46 +1,82 @@
-#' Conveinience function to perform feature filtering using \code{genefilter}.
+#' Functions to filter features or samples using \code{\link[genefilter]{genefilter}}.
 #'
-#' @param object A SingleCellExperiment object.
-#' @param flist A named list with gene filters. Names should be callable functions, list items should be named paramters.
-#' @param exprs_values String indicating which assay contains the data that should be used for filtering.
+#' The functions will assemble a (combined) filtering function from the inputs and then apply it to features/samples from the given \code{\link[SingleCellExperiment]{SingleCellExperiment}} object.
+#'
+#' The list of filters should be of the format \code{list("package::function" = list(...))}. The filter functions described here will try to fetch the correct function from the associated package namespace before evaluation.
+#' In case several filters are given, the filter functions allow to tolerate up to \code{tolerate} \emph{failing} filters. This is useful to implement \emph{OR} conjuctions between filters.
+#'
+#' @param object A \code{\link[SingleCellExperiment]{SingleCellExperiment}} object.
+#' @param filters A named list. Names should be callable (filter) functions, list items should be named paramters.
+#' @param exprs_values String indicating which \code{\link[SummarizedExperiment]{assay}} contains the data that should be used for filtering.
 #' @param tolerate A number indicating how many failed filters should be toleated.
 #'
-#' @return A SingleCellExperiment object with features passing the filter(s).
+#' @return A \code{\link[SingleCellExperiment]{SingleCellExperiment}} object with features or samples passing the filter(s).
+#' @name filter
 #'
+#' @examples
+#' \dontrun{
+#' # Keep only features with an aggregated expression above 1000 counts.
+#' obj <- filter_features(obj, list("EpOverA" = list(A = 1000)))
+#'
+#' # Keep only features with an aggregated expression above 1000 counts and expression in at least in 10 samples.
+#' obj <- filter_features(obj, list("EpOverA" = list(A = 1000), "genefilter::kOverA" = list(k=10, A=0)))
+#'
+#' # Keep only features with an aggregated expression above 1000 counts or expression in at least in 10 samples (tolerate one being not met).
+#' obj <- filter_features(obj, list("EpOverA" = list(A = 1000), "genefilter::kOverA" = list(k=10, A=0)), tolerate = 1)
+#'
+#' # Keep only features with expression over 10 in at least 5 samples, using the fpkm assay.
+#' obj <- filter_features(obj, list("genefilter::kOverA" = list(k=5, A=10)), exprs_values = "fpkm")
+#'
+#' # Keep only samples that express at least 1000 features.
+#' obj <- filter_samples(obj, list("genefilter::kOverA" = list(k = 1000, A=0))
+#'
+#' # Keep only samples with at least 100000 counts across all features.
+#' obj <- filter_samples(obj, list("EpOverA" = list(A = 100000)))
+#' }
+NULL
+#> NULL
+
+#' @rdname filter
 #' @export
-filter_features <- function(object, flist, exprs_values = "counts", tolerate = 0) {
-  filter_functions <- construct_filters(flist)
+filter_features <- function(object, filters, exprs_values = "counts", tolerate = 0) {
+  filter_functions <- construct_filters(filters)
 
   keep <- apply(SummarizedExperiment::assay(object, i = exprs_values), 1, n_filterfun(n = tolerate, filter_functions))
-  SingleCellExperiment:::int_metadata(object)$feature_filter <- flist
+  SingleCellExperiment:::int_metadata(object)$feature_filter <- filters
   return(object[keep, ])
 }
 
-#' Conveinience function to perform sample filtering using \code{genefilter}.
-#'
-#' @param object A SingleCellExperiment object.
-#' @param flist A named list with gene filters. Names should be callable functions, list items should be named paramters.
-#' @param exprs_values String indicating which assay contains the data that should be used for filtering.
-#' @param tolerate A number indicating how many failed filters should be toleated.
-#'
-#' @return A SingleCellExperiment object with samples passing the filter(s).
-#'
+#' @rdname filter
 #' @export
-filter_samples <- function(object, flist, exprs_values = "counts", tolerate = 0) {
-  filter_functions <- construct_filters(flist)
+filter_samples <- function(object, filters, exprs_values = "counts", tolerate = 0) {
+  filter_functions <- construct_filters(filters)
 
   keep <- apply(t(SummarizedExperiment::assay(object, i = exprs_values)), 1, n_filterfun(n = tolerate, filter_functions))
-  SingleCellExperiment:::int_metadata(object)$sample_filter <- flist
+  SingleCellExperiment:::int_metadata(object)$sample_filter <- filters
   return(object[, keep])
 }
 
-#' EpOverA returns a filter function with bindings for A. This function evaluates to TRUE if the aggregate of the arguments elements are larger than A.
+#' Basic filter functions
 #'
-#' @param A The value you want to exceed.
+#' Basic filter functions return functions with bindings for A. The function evaluates to \code{TRUE} if some operation on the input results in a value greater/smaller than A.
+#'
+#' The basic filter functions in detail:
+#' \itemize{
+#' \item \code{EpOverA} evaluates to \code{TRUE} if the aggregate of the arguments elements are larger than A.
+#' \item \code{FanoOverA} evaluates to \code{TRUE} if the Fano factor of the argument is larger than A.
+#' \item \code{MeanBelowA} evaluates to \code{TRUE} if the mean of the arguments elements are smaller than A.
+#' \item \code{MeanOverA} evaluates to \code{TRUE} if the mean of the arguments elements are greater than A.
+#' }
+#'
+#' @param A The value that should / should not be exceeded.
 #' @param na.rm Whether NAs should be removed.
 #'
 #' @return A function with bindings for A.
-#'
+#' @name filterfunctions
+NULL
+#> NULL
+
+#' @rdname filterfunctions
 #' @export
 EpOverA <- function(A = 4, na.rm = TRUE) {
   function(x) {
@@ -50,15 +86,7 @@ EpOverA <- function(A = 4, na.rm = TRUE) {
   }
 }
 
-#' FanoOverA returns a filter function with bindings for A. This function evaluates to TRUE if the Fano factor of the argument is larger than A.
-#'
-#' @param A The value that should be exceeded.
-#' @param na.rm Whether NAs should be removed.
-#'
-#' @return A function with bindings for A.
-#'
-#' @details See Weinreb et.al., https://doi.org/10.1093/bioinformatics/btx792
-#'
+#' @rdname filterfunctions
 #' @export
 FanoOverA <- function(A = 2, na.rm = TRUE) {
   function(x) {
@@ -68,13 +96,7 @@ FanoOverA <- function(A = 2, na.rm = TRUE) {
   }
 }
 
-#' MeanBelowA returns a filter function with bindings for A. This function evaluates to TRUE if the mean of the arguments elements are smaller than A.
-#'
-#' @param A The value you do not want to exceed.
-#' @param na.rm Whether NAs should be removed.
-#'
-#' @return A function with bindings for A.
-#'
+#' @rdname filterfunctions
 #' @export
 MeanBelowA <- function(A = 4, na.rm = TRUE) {
   function(x) {
@@ -84,13 +106,7 @@ MeanBelowA <- function(A = 4, na.rm = TRUE) {
   }
 }
 
-#' MeanOverA returns a filter function with bindings for A. This function evaluates to TRUE if the mean of the arguments elements are greater than A.
-#'
-#' @param A The value you want to exceed.
-#' @param na.rm Whether NAs should be removed.
-#'
-#' @return A function with bindings for A.
-#'
+#' @rdname filterfunctions
 #' @export
 MeanOverA <- function(A = 4, na.rm = TRUE) {
   function(x) {
@@ -100,7 +116,7 @@ MeanOverA <- function(A = 4, na.rm = TRUE) {
   }
 }
 
-#' scaterIsOutlier returns a filter function with bindings for parameters for \code{\link[scater]{isOutlier}}.
+#' A filter function with bindings for parameters for \code{\link[scater]{isOutlier}}.
 #'
 #' @param ... Parameters that will be bound to the \code{\link[scater]{isOutlier}} code.
 #'

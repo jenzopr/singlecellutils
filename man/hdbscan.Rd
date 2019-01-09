@@ -25,5 +25,5 @@ A factor with the assigned cluster.
 }
 \description{
 Performs HDBSCAN clustering on a SingleCellExperiment object.
-The algorithm is explained in detail in http://joss.theoj.org/papers/10.21105/joss.00205 and needs the python package \code{hdbscan} installed.
+The algorithm is explained in detail in \href{http://joss.theoj.org/papers/10.21105/joss.00205}{McInnes et. al.} and needs the python package \href{https://pypi.org/project/hdbscan/}{hdbscan} installed.
 }

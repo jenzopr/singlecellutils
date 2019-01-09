@@ -2,22 +2,25 @@
 % Please edit documentation in R/clustering.R
 \name{add_clustering}
 \alias{add_clustering}
-\title{Adds results from a particular clustering technique to the object.}
+\title{Add a clustering}
 \usage{
 add_clustering(object, flavor = c("hdbscan"), column = ".cluster", ...)
 }
 \arguments{
-\item{object}{A SingleCellExperiment object.}
+\item{object}{A \linkS4class{SingleCellExperiment::SingleCellExperiment} object.}
 
 \item{flavor}{Determines which clustering technique to apply.}
 
-\item{column}{Determines the column name of the \code{colData} slot to store results to.}
+\item{column}{Determines the column name of the \code{\link[SummarizedExperiment]{colData}} slot to store results to.}
 
 \item{...}{Additional parameters passed to functions.}
 }
 \value{
-A SingleCellExperiment object with modified \code{colData} slot.
+A SingleCellExperiment object with modified \code{\link[SummarizedExperiment]{colData}} slot.
 }
 \description{
 Adds results from a particular clustering technique to the object.
+}
+\seealso{
+[hdbscan()] for HDBSCAN clustering.
 }

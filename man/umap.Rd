@@ -32,5 +32,5 @@ A matrix with the two-dimensional embedding.
 }
 \description{
 Performs Uniform Manifold Approximation and Projection (UMAP) on a SingleCellExperiment object.
-The algorithm is explained in detail in https://arxiv.org/abs/1802.03426 and needs the python packages umap and numpy installed.
+The algorithm is explained in detail in \href{https://arxiv.org/abs/1802.03426}{McInnes et. al.} and requires the python packages \href{https://pypi.org/project/umap-learn/}{umap-learn} and \href{https://pypi.org/project/numpy/}{numpy} to be installed.
 }
