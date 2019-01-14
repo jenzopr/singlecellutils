@@ -4,8 +4,8 @@
 \alias{reduce_dimension}
 \title{Performs dimension reduction and adds results to the given input.}
 \usage{
-reduce_dimension(object, flavor = c("umap", "som", "asvd", "isomds", "rsvd"),
-  slot = flavor, ...)
+reduce_dimension(object, flavor = c("umap", "som", "asvd", "isomds",
+  "rsvd"), slot = flavor, ...)
 }
 \arguments{
 \item{object}{A \code{\link[SingleCellExperiment]{SingleCellExperiment}} object.}

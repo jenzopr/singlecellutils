@@ -5,8 +5,8 @@
 \title{Calculates the term frequency-inverse document frequency.}
 \usage{
 tf_idf(object, exprs_values = "counts", features = NULL,
-  tf.method = c("raw", "adjusted", "logscaled"), idf.weight = c("unary",
-  "idf", "idf.smooth", "pidf"))
+  tf.method = c("raw", "binary", "adjusted", "logscaled"),
+  idf.weight = c("unary", "idf", "idf.smooth", "pidf"), slot = "tdifd")
 }
 \arguments{
 \item{object}{A SingleCellExperiment object.}
@@ -18,9 +18,11 @@ tf_idf(object, exprs_values = "counts", features = NULL,
 \item{tf.method}{A character vector indicating the variant for calculating the TF.}
 
 \item{idf.weight}{A character vector indicating the weighting for IDF calculation.}
+
+\item{slot}{Determines the name of the assay in \code{\link[SingleCellExperiment]{assays}} to use for weighted expression values.}
 }
 \value{
-A \code{\link[Matrix]{sparseMatrix}}
+A \code{\link[SingleCellExperiment]{SingleCellExperiment}} object with modified \code{reducedDims} slot.
 }
 \description{
 Calculates the term frequency-inverse document frequency.

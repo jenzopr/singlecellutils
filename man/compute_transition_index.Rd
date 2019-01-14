@@ -5,7 +5,8 @@
 \title{Calculate the critical transition index for cells in a SingleCellExperiment object.
 The critical transition index is described in detail in http://www.pnas.org/content/114/9/2271.long.}
 \usage{
-compute_transition_index(object, exprs_values, features = NULL, pval = 0.01)
+compute_transition_index(object, exprs_values, features = NULL,
+  pval = 0.01)
 }
 \arguments{
 \item{object}{A SingleCellExperiment object.}

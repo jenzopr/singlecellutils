@@ -4,8 +4,8 @@
 \alias{bootstrap_transition_index}
 \title{Run non-parametric bootstrapping for critical transition index values and a grouping variable}
 \usage{
-bootstrap_transition_index(object, exprs_values, grouping, features = NULL,
-  n = 20, R = 999, ...)
+bootstrap_transition_index(object, exprs_values, grouping,
+  features = NULL, n = 20, R = 999, ...)
 }
 \arguments{
 \item{object}{A SingleCellExperiment object.}

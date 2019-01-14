@@ -6,11 +6,11 @@
 \alias{approximate_svd}
 \title{Approximate or randomized singular value decomposition}
 \usage{
-randomized_svd(object, exprs_values, n_dims, features = NULL, skip = NULL,
-  seed = NULL, ...)
+randomized_svd(object, exprs_values, n_dims, features = NULL,
+  skip = NULL, seed = NULL, ...)
 
-approximate_svd(object, exprs_values, n_dims, features = NULL, skip = NULL,
-  seed = NULL, ...)
+approximate_svd(object, exprs_values, n_dims, features = NULL,
+  skip = NULL, seed = NULL, ...)
 }
 \arguments{
 \item{object}{A SingleCellExperiment object.}

@@ -4,8 +4,8 @@
 \alias{discover_element}
 \title{Convenience function to discover elements in \code{what} in a vector \code{where} using a function \code{FUN}.}
 \usage{
-discover_element(object, what, where = c("rownames", "colnames", "rowData",
-  "colData"), FUN = c("grepl", "is_in"), column = NULL)
+discover_element(object, what, where = c("rownames", "colnames",
+  "rowData", "colData"), FUN = c("grepl", "is_in"), column = NULL)
 }
 \arguments{
 \item{object}{A SingleCellExperiment object.}
