@@ -61,6 +61,10 @@ reduce_dimension <- function(object, flavor = c("umap", "som", "asvd", "isomds",
 #'
 #' @export
 umap <- function(object, exprs_values, features = NULL, scale = T, n_neighbors = 5L, min_dist = 0.1, metric = "correlation", use_dimred = NULL, seed = NULL) {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package reticulate needed for this function to work. Please install it.", call. = FALSE)
+  }
+
   if (!is.null(seed)) set.seed(seed)
   umap <- reticulate::import("umap")
   np <- reticulate::import("numpy", convert=FALSE)
@@ -125,6 +129,10 @@ NULL
 #' @rdname svd
 #' @export
 randomized_svd <- function(object, exprs_values, n_dims, features = NULL, skip = NULL, seed = NULL, ...) {
+  if (!requireNamespace("rsvd", quietly = TRUE)) {
+    stop("Package rsvd needed for this function to work. Please install it.", call. = FALSE)
+  }
+
   if (!is.null(seed)) set.seed(seed)
 
   input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values))

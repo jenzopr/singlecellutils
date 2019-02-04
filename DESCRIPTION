@@ -14,10 +14,10 @@ Imports:
     methods,
     stats,
     ggplot2,
+    dplyr,
     Hmisc,
     kohonen,
     magrittr,
-    reticulate,
     rlang,
     SummarizedExperiment,
     SingleCellExperiment,
@@ -25,6 +25,9 @@ Imports:
     Rtsne,
     irlba,
     WGCNA,
+    MASS,
+Suggests:
+    reticulate,
     rsvd,
-    MASS
+    lmtest
 RoxygenNote: 6.1.1

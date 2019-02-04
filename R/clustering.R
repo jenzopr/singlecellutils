@@ -34,6 +34,10 @@ add_clustering <- function(object, flavor = c("hdbscan"), column = ".cluster", .
 #'
 #' @export
 hdbscan <- function(object, use_dimred, min_samples = 7L, min_cluster_size = 9L, outlier = 0, seed = NULL) {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package reticulate needed for this function to work. Please install it.", call. = FALSE)
+  }
+
   if (!is.null(seed)) set.seed(seed)
 
   h <- reticulate::import("hdbscan")
