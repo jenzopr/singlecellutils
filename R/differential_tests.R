@@ -39,7 +39,7 @@ lrde_test <- function(object, response, exprs_values = "logcounts", group_by = N
     }
 
     data.frame(group = group_by, index = 1:length(group_by)) %>%
-      filter(!is.na(group)) %>%
+      dplyr::filter(!is.na(group)) %>%
       dplyr::group_by(group) %>%
       dplyr::do(pvalue = .lrde_pval(t(input[.$index, ]), response, reference)) %>%
       dplyr::ungroup() %>%

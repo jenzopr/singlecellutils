@@ -10,7 +10,7 @@
 #' @return A \code{\link[SingleCellExperiment]{SingleCellExperiment}} object with modified \code{reducedDims} slot.
 #'
 #' @export
-tf_idf <- function(object, exprs_values = "counts", features = NULL, tf.method = c("raw", "binary", "adjusted", "logscaled"), idf.weight = c("unary", "idf", "idf.smooth", "pidf"), slot = "tdifd") {
+tf_idf <- function(object, exprs_values = "counts", features = NULL, tf.method = c("raw", "binary", "adjusted", "logscaled"), idf.weight = c("unary", "idf", "idf.smooth", "pidf"), slot = "tfidf") {
   input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values))
   if (!is.null(features)) {
     input <- as.matrix(SummarizedExperiment::assay(object, i = exprs_values)[features,])
