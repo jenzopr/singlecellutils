@@ -53,7 +53,7 @@ filter_features <- function(object, filters, exprs_values = "counts", tolerate =
 filter_samples <- function(object, filters, exprs_values = "counts", tolerate = 0) {
   filter_functions <- construct_filters(filters)
 
-  keep <- apply(t(SummarizedExperiment::assay(object, i = exprs_values)), 1, n_filterfun(n = tolerate, filter_functions))
+  keep <- apply(Matrix::t(SummarizedExperiment::assay(object, i = exprs_values)), 1, n_filterfun(n = tolerate, filter_functions))
   SingleCellExperiment:::int_metadata(object)$sample_filter <- filters
   return(object[, keep])
 }

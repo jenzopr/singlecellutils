@@ -6,7 +6,7 @@
 \usage{
 tf_idf(object, exprs_values = "counts", features = NULL,
   tf.method = c("raw", "binary", "adjusted", "logscaled"),
-  idf.weight = c("unary", "idf", "idf.smooth", "pidf"), slot = "tdifd")
+  idf.weight = c("unary", "idf", "idf.smooth", "pidf"), slot = "tfidf")
 }
 \arguments{
 \item{object}{A SingleCellExperiment object.}

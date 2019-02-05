@@ -1,0 +1,176 @@
+---
+title: "Filtering samples and features with singlecellutils"
+author: "Jens Preussner"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    fig_caption: yes
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+if(!requireNamespace("BiocStyle", quietly = TRUE)) {
+  stop("BiocStyle is neccessary for building this vignette. Please install it.")
+}
+if(!requireNamespace("genefilter", quietly = TRUE)) {
+  stop("genefilter is neccessary for building this vignette. Please install it.")
+}
+```
+
+This vignette will teach you how to use methods from `singlecellutils` to detect and filter low quality samples and exclude features that are lowly expressed. Methods from `singlecellutils` are enabled for *piping* (using `r BiocStyle::CRANpkg("magrittr")`s pipe operator) and allow you to write code that is easily understandable.
+
+## Load an example data set - 1k Brain cells
+
+Throughout this vignette, you'll use the 1k Brain Cells dataset from [10xgenomics.com](https://support.10xgenomics.com/single-cell-gene-expression/datasets/3.0.0/neuron_1k_v3). It ships with `singlecellutils` and is already preprocessed as a `SingleCellExperiment` data object from the `r BiocStyle::Biocpkg("SingleCellExperiment")` package. Just load the object like below and you're good to go:
+
+```{r setup-load}
+data("neuron_1k_v3", package = "singlecellutils")
+```
+
+## Low quality sample filtering
+
+Samples of low quality are typically associated with the detection of only a few features (e.g. *genes*) or have generated only a low number of sequencing reads due to deteriorated DNA. During preprocessing of dataset loaded above, we also ran the  `calculateQCMetrics()` function from the `r BiocStyle::Biocpkg("scater")` package, that adds such important quality criteria to the `colData` slot of the `neuron_1k_v3` object. Take a quick look to get a feeling for the information that is available:
+
+```{r sample-filtering-coldata}
+head(SummarizedExperiment::colData(neuron_1k_v3))
+```
+
+You're particularly interested in the `total_features_by_umi` column, whose values count the number of detected features, and in the `total_umi` column, whose values count the number of *unique molecular identifiers* (UMI) associated with each sample.
+
+Let's check how those two quality criteria distribute, by plotting a violin plot, where each sample is represented by a dot: 
+
+```{r sample-filtering-distribution-echo, eval=FALSE}
+scater::plotColData(neuron_1k_v3, y = "total_features_by_umi")
+scater::plotColData(neuron_1k_v3, y = "log10_total_umi")
+```
+
+```{r sample-filtering-distribution-eval, echo = FALSE, fig.cap="Distribution of `total_features_by_umi` and `total_umi` (log-scaled) across all samples in the `neuron_1k_v3` dataset.", fig.show='hold'}
+scater::plotColData(neuron_1k_v3, y = "total_features_by_umi") + ggplot2::geom_hline(yintercept = 1500, color = "darkred") + ggplot2::coord_flip()
+scater::plotColData(neuron_1k_v3, y = "log10_total_umi") + ggplot2::geom_hline(yintercept = 3.5, color = "darkred") + ggplot2::coord_flip()
+```
+
+From the figure above, you can see that roughly 1500 features are detected in the vast majority of samples. Further, most of the cells are associated with $10^{3.5}$ (thats slightly more than 3100) or more distinct UMIs. Samples below those values (or left of the red vertical lines) are potentially outliers and could be removed before downstream analysis^[Feel free to see `r BiocStyle::Biocpkg("scater")`s function `isOutlier` for a more sophisticated approach to detect outlier cells.]. 
+
+> The `singlecellutils` package adopts the approach of the `r BiocStyle::Biocpkg("genefilter")` package to filter samples and features. The idea is to combine output from multiple *filter functions*, each returning `TRUE` or `FALSE` for every sample/feature, indicating if the sample/feature should be filtered out or not. However, `singlecellutils` extends the functionality of `r BiocStyle::Biocpkg("genefilter")` to allow *OR* conjunctions between filters as well.
+
+Create two sample filters, using the `kOverA` function from `genefilter` and the `EpOverA` function from `singlecellutils`:
+
+```{r sample-filtering-filters}
+sample_filter <- list("genefilter::kOverA" = list(k = 1500, A = 1),
+                      "singlecellutils::EpOverA" = list(A = 3100))
+```
+
+**Explanation**: `genefilter::kOverA` is a filter function that returns `TRUE`, if `k` inspected values are above a value of `A`. In our case, `k = 1500` features have to exceed a UMI count of `A = 1`, indicating expression. `singlecellutils::EpOverA` is a filter function, that returns `TRUE` if the aggregate of values is above `A`. In our case, samples have to exceed an aggregated UMI count of `A = 3100`.
+
+For example, after a call to
+
+```{r sample-filtering-processing-echo, eval=FALSE}
+neuron_1k_v3 %<>%
+  singlecellutils::filter_samples(sample_filter, exprs_values = "umi")
+```
+
+```{r sample-filtering-processing, echo=FALSE}
+neuron_1k_v3 %>%
+  singlecellutils::filter_samples(sample_filter, exprs_values = "umi") %>%
+  ncol() -> ncol_tolerate_zero
+```
+
+the `neuron_1k_v3` object contains `r ncol_tolerate_zero` remaining samples. If you would like to combine filters with an *OR* conjunction use the `tolerate` argument of `filter_samples`:
+
+```{r sample-filtering-processing-tolerate-echo, eval=FALSE}
+neuron_1k_v3 %<>%
+  singlecellutils::filter_samples(sample_filter, exprs_values = "umi", tolerate = 1)
+```
+
+```{r sample-filtering-processing-tolerate, echo=FALSE}
+neuron_1k_v3 %>%
+  singlecellutils::filter_samples(sample_filter, exprs_values = "umi", tolerate = 1) %>%
+  ncol() -> ncol_tolerate_one
+```
+
+In this case, `r ncol_tolerate_one` high quality samples remain.
+
+## Filtering lowly expressed genes
+
+Similar to low quality samples, lowly expressed features can also obfuscate downstream analysis (e.g. *dimension reduction* or *clustering*) and should be removed as well. Again, take a quick look at the output of the `calculateQCMetrics()` function, this time for *feature-based* quality measures:
+
+```{r feature-filtering-rowdata}
+head(SummarizedExperiment::rowData(neuron_1k_v3))
+```
+
+Maybe you're particularly interested in the `mean_umi` column, whose values represent the *mean* UMI count of the feature across all samples, and in the `n_cells_by_umi` column, whose values count the number of samples that express the feature. 
+
+Let's check how those two quality criteria distribute, by plotting a violin plot, where each feature is represented by a dot: 
+
+```{r feature-filtering-distribution-echo, eval=FALSE}
+scater::plotRowData(neuron_1k_v3, y = "mean_umi")
+scater::plotRowData(neuron_1k_v3, y = "n_cells_by_umi")
+```
+
+```{r feature-filtering-distribution-eval, echo = FALSE, fig.cap="Distribution of `mean_umi` and `n_cells_by_umi` across all features in the `neuron_1k_v3` dataset.", fig.show='hold'}
+scater::plotRowData(neuron_1k_v3, y = "mean_umi") + ggplot2::geom_hline(yintercept = 0.1, color = "darkred") + ggplot2::coord_flip()
+scater::plotRowData(neuron_1k_v3, y = "n_cells_by_umi") + ggplot2::geom_hline(yintercept = 10, color = "darkred") + ggplot2::coord_flip()
+```
+
+From the figure above, you can see that most features are expressed at very low levels (the red bar indicates a mean of 0.1) and only in a fraction of samples (the red bar indicates 20 samples). We will demonstrate feature filtering using two *filter functions* from `singlecellutils` and `genefilter`:
+
+```{r feature-filtering-filters}
+feature_filter <- list("singlecellutils::MeanOverA" = list(A = 0.1),
+                      "genefilter::kOverA" = list(k = 10, A = 1))
+```
+
+**Explanation**: `singlecellutils::MeanOverA` is a filter function that returns `TRUE`, if the mean of the inspected values are above a value of `A`. In our case, the mean UMI count of a feature has to be above `A = 0.1` for the feature to remain in the dataset. `genefilter::kOverA` is a filter function that returns `TRUE`, if `k` inspected values are above a value of `A`. In our case, features have to be expressed in at least `k = 10` samples.
+
+For example, after a call to
+
+```{r feature-filtering-processing-echo, eval=FALSE}
+neuron_1k_v3 %<>%
+  singlecellutils::filter_features(feature_filter, exprs_values = "umi")
+```
+
+```{r feature-filtering-processing, echo=FALSE}
+neuron_1k_v3 %>%
+  singlecellutils::filter_features(feature_filter, exprs_values = "umi") %>%
+  nrow() -> nrow_tolerate_zero
+```
+
+the `neuron_1k_v3` object contains `r nrow_tolerate_zero` remaining features. If you would like to combine filters with an *OR* conjunction use the `tolerate` argument of `filter_features`:
+
+```{r feature-filtering-processing-tolerate-echo, eval=FALSE}
+neuron_1k_v3 %<>%
+  singlecellutils::filter_features(feature_filter, exprs_values = "umi", tolerate = 1)
+```
+
+```{r feature-filtering-processing-tolerate, echo=FALSE}
+neuron_1k_v3 %>%
+  singlecellutils::filter_features(feature_filter, exprs_values = "umi", tolerate = 1) %>%
+  nrow() -> nrow_tolerate_one
+```
+
+In this case, `r nrow_tolerate_one` features remain in the dataset.
+
+## Using pipes to filter samples and genes
+
+The examples showing sample and feature filtering from above can easily be combined into one *pipeline*. This will reduce the amount of code you'll have to write, enhances visibility of what functions are applied to the `neuron_1k_v3` object and normally speeds up your analysis as well. Here we go:
+
+```{r pipe-processing}
+neuron_1k_v3 %<>%
+  singlecellutils::filter_samples(list("genefilter::kOverA" = list(k = 1500, A = 1),
+                                       "singlecellutils::EpOverA" = list(A = 3100)),
+                                  exprs_values = "umi",
+                                  tolerate = 1) %>%
+  singlecellutils::filter_features(list("singlecellutils::MeanOverA" = list(A = 0.1),
+                                        "genefilter::kOverA" = list(k = 10, A = 1)),
+                                   exprs_values = "umi",
+                                   tolerate = 1)
+                                    
+```
+
+Using only two lines, the final object is filtered for low quality samples and lowly expressed features and now contains data from `r nrow(neuron_1k_v3)` features measured across `r ncol(neuron_1k_v3)` samples. Happy downstream analysis ;-)

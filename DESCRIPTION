@@ -29,5 +29,10 @@ Imports:
 Suggests:
     reticulate,
     rsvd,
-    lmtest
+    lmtest,
+    knitr,
+    rmarkdown,
+    BiocStyle,
+    genefilter
 RoxygenNote: 6.1.1
+VignetteBuilder: knitr
