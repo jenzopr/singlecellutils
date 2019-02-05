@@ -1,0 +1,32 @@
+reference:
+  - title: "Filtering"
+    desc: Functions for filtering features or samples.
+    contents:
+      - filter_features
+      - filter_samples
+      - EpOverA
+      - FanoOverA
+      - MeanBelowA
+      - MeanOverA
+  - title: "Dimension reduction"
+    desc: Functions that provide dimension reduction techniques.
+    contents:
+      - reduce_dimension
+      - approximate_svd
+      - isomds
+      - randomized_svd
+      - tSOM
+      - umap
+  - title: "Clustering"
+    desc: Functions for clustering
+    contents:
+      - add_clustering
+      - hdbscan
+  - title: "Differential expression and accessibility"
+    desc: Functions to perform DE analysis
+    contents:
+      - lrde_test
+articles:
+- title: All vignettes
+  desc: ~
+  contents: '`singlecellutils-filtering`'
