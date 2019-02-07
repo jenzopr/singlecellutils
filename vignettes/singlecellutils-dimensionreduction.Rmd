@@ -124,7 +124,7 @@ gridExtra::grid.arrange(figure_umap_a, figure_umap_b, nrow = 1)
 
 ## Clustering samples using HDBSCAN
 
-**H**ierarchical **D**ensity-**B**ased **S**patial **C**lustering of **A**pplications with **N**oise (HDBSCAN) [@mcinnes_hdbscan_2017], is a new density-based clustering algorithm that extends DBSCAN [@ester_dbscan_1996] by converting it into a hierarchical clustering algorithm, and then using a technique to extract a flat clustering based in the stability of clusters. This allows HDBSCAN to find clusters of varying densities (unlike DBSCAN), and be more robust to parameters. 
+**H**ierarchical **D**ensity-**B**ased **S**patial **C**lustering of **A**pplications with **N**oise (HDBSCAN)^[see McInnes et. al., hdbscan: Hierarchical density based clustering (2017)], is a new density-based clustering algorithm that extends DBSCAN^[see Ester et. al., A density-based algorithm for discovering clusters in large spatial databases with noise (1996)] by converting it into a hierarchical clustering algorithm, and then using a technique to extract a flat clustering based in the stability of clusters. This allows HDBSCAN to find clusters of varying densities (unlike DBSCAN), and be more robust to parameters. 
 
 ```{r hdbscan, eval=FALSE}
 neuron_1k_v3 %<>%
