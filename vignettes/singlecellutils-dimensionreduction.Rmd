@@ -1,0 +1,177 @@
+---
+title: "Dimension reduction and clustering with singlecellutils"
+author: "Jens Preussner"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    fig_caption: yes
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+library(magrittr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  message = FALSE,
+  comment = "#>"
+)
+if(!requireNamespace("BiocStyle", quietly = TRUE)) {
+  stop("BiocStyle is neccessary for building this vignette. Please install it.")
+}
+if(!requireNamespace("genefilter", quietly = TRUE)) {
+  stop("genefilter is neccessary for building this vignette. Please install it.")
+}
+```
+
+This vignette will teach you how to use methods from `singlecellutils` to perform dimension reduction and clustering of samples. Methods from `singlecellutils` are enabled for *piping* (using `r BiocStyle::CRANpkg("magrittr")`s pipe operator) and allow you to write code that is easily understandable.
+
+## Load an example data set - 1k Brain cells
+
+Throughout this vignette, you'll use the 1k Brain Cells dataset from [10xgenomics.com](https://support.10xgenomics.com/single-cell-gene-expression/datasets/3.0.0/neuron_1k_v3). It ships with `singlecellutils` and is already preprocessed as a `SingleCellExperiment` data object from the `r BiocStyle::Biocpkg("SingleCellExperiment")` package. Here, we'll load the object and perform filtering as described in the [Filtering samples and features with singlecellutils](singlecellutils-filtering.html) vignette:
+
+```{r setup-load}
+data("neuron_1k_v3", package = "singlecellutils")
+
+neuron_1k_v3 %<>%
+  singlecellutils::filter_samples(list("genefilter::kOverA" = list(k = 1500, A = 1),
+                                       "singlecellutils::EpOverA" = list(A = 3100)),
+                                  exprs_values = "umi",
+                                  tolerate = 1) %>%
+  singlecellutils::filter_features(list("singlecellutils::MeanOverA" = list(A = 0.1),
+                                        "genefilter::kOverA" = list(k = 10, A = 1)),
+                                   exprs_values = "umi",
+                                   tolerate = 1) %>%
+  scater::calculateQCMetrics(exprs_values = "umi")
+```
+
+## Normalize the expression using scran and scater
+
+A typical step after filtering is normalization. Here, we'll rely on a quick and simple calculation of cell-specific size factors using the `simpleSumFactors` function from the `r BiocStyle::Biocpkg("scran")` package. The function adds the size factors to the `sizeFactors`-slot in `neuron_1k_v3`, which is picked up by `r BiocStyle::Biocpkg("scater")`'s `normalize` function:
+
+```{r setup-normalization, message=FALSE, warning=FALSE}
+neuron_1k_v3 %<>%
+  scran::simpleSumFactors(assay.type = "umi") %>%
+  scater::normalize(exprs_values = "umi")
+```
+
+## Performing dimension reduction using UMAP
+
+> UMAP (Uniform Manifold Approximation and Projection) is a novel manifold learning technique for dimension reduction. [...] The UMAP algorithm is competitive with t-SNE for visualization quality, and arguably preserves more of the global structure with superior run time performance. Furthermore, UMAP has no computational restrictions on embedding dimension, making it viable as a general purpose dimension reduction technique for machine learning.
+>
+> *from the [UMAP paper](https://arxiv.org/abs/1802.03426) abstract*
+
+Two parameters determine UMAPs performance:
+
+The **number of neighboring points** determines how much of the global structure is being preserved at the loss of local structure. Larger values preserve more of the global structure and values in the range of 5 to 50 are mostly fine, with 10-15 being sensible defaults.
+
+The **minimum distance** controls how tightly the embedding is allowed to compress points together. Larger values ensure embedded points are more evenly distributed, while smaller values allow the algorithm to optimise more accurately with regard to local structure. Sensible values are in the range 0.001 to 0.5, with 0.1 being a reasonable default.
+
+We'll first explore, how different values of one of those two parameters change the embedding, when keeping the other value fixed:
+
+```{r umap-explore-neighbors, echo = FALSE, fig.cap='Performance of UMAP across differen values of `n_neighbors`.', fig.width=8}
+n_neighbor_values <- c(15, 20, 25)
+
+list_subfigures <- lapply(n_neighbor_values, function(n_neighbors) {
+  neuron_1k_v3 %>%
+    singlecellutils::reduce_dimension(flavor = "umap", exprs_values = "logcounts", n_neighbors = n_neighbors, seed = 2304) %>%
+    scater::plotReducedDim(use_dimred = "umap", add_ticks = FALSE) +
+    ggplot2::ggtitle(paste("n_neighbors =", n_neighbors)) 
+})
+  
+gridExtra::grid.arrange(list_subfigures[[1]], list_subfigures[[2]], list_subfigures[[3]], nrow = 1)
+```
+
+```{r umap-explore-distance, fig.cap='Performance of UMAP across differen values of `min_dist`.', fig.width=8, echo = FALSE}
+min_dist_values <- c(0.1, 0.3, 0.5)
+
+list_subfigures <- lapply(min_dist_values, function(min_dist) {
+  neuron_1k_v3 %>%
+    singlecellutils::reduce_dimension(flavor = "umap", exprs_values = "logcounts", n_neighbors = 20L, min_dist = min_dist, seed = 2304) %>%
+    scater::plotReducedDim(use_dimred = "umap", add_ticks = FALSE) +
+    ggplot2::ggtitle(paste("min_dist =", min_dist)) 
+})
+
+gridExtra::grid.arrange(list_subfigures[[1]], list_subfigures[[2]], list_subfigures[[3]], nrow = 1)
+```
+
+As we can see from above, a value of `20` for `n_neighbors` should be chosen at minimum, whereas the `min_dist` should not exceed `0.1` to permit reliable identification of subclusters. 
+
+We can now use UMAP and visualize the resulting dimension reduction in several ways:
+
+```{r umap}
+neuron_1k_v3 %<>%
+  singlecellutils::reduce_dimension(flavor = "umap",
+                                    exprs_values = "logcounts",
+                                    n_neighbors = 20L,
+                                    min_dist = 0.1,
+                                    seed = 2304)
+```
+
+and visualize the dimension reduction with different quality criteria (see [Section visualization](#vis) for source code examples):
+
+```{r umap-figure, fig.cap="UMAP dimension reduction on the `neuron_1k_v3` dataset, using `n_neighbors = 20` and `min_dist = 0.1` as input parameters.", echo=FALSE, fig.width=8}
+neuron_1k_v3 %>%
+  scater::plotReducedDim(use_dimred = "umap", add_ticks = FALSE, colour_by = "log10_total_umi") -> figure_umap_a
+
+neuron_1k_v3 %>%
+  scater::plotReducedDim(use_dimred = "umap", add_ticks = FALSE, colour_by = "total_features_by_umi") -> figure_umap_b
+
+gridExtra::grid.arrange(figure_umap_a, figure_umap_b, nrow = 1)
+```
+
+## Clustering samples using HDBSCAN
+
+**H**ierarchical **D**ensity-**B**ased **S**patial **C**lustering of **A**pplications with **N**oise (HDBSCAN) [@mcinnes_hdbscan_2017], is a new density-based clustering algorithm that extends DBSCAN [@ester_dbscan_1996] by converting it into a hierarchical clustering algorithm, and then using a technique to extract a flat clustering based in the stability of clusters. This allows HDBSCAN to find clusters of varying densities (unlike DBSCAN), and be more robust to parameters. 
+
+```{r hdbscan, eval=FALSE}
+neuron_1k_v3 %<>%
+  singlecellutils::add_clustering(flavor = "hdbscan",
+                                  use_dimred = "umap",
+                                  column = ".clustering_911",
+                                  min_samples = 9L,
+                                  min_cluster_size = 11L)
+```
+
+```{r hdbscan-eval, echo = FALSE}
+neuron_1k_v3 %<>%
+  singlecellutils::add_clustering(flavor = "hdbscan", use_dimred = "umap", min_samples = 9L, min_cluster_size = 11L, column = ".clustering_911") %>%
+  singlecellutils::add_clustering(flavor = "hdbscan", use_dimred = "umap", min_samples = 17L, min_cluster_size = 19L, column = ".clustering_1719") %>%
+  singlecellutils::add_clustering(flavor = "hdbscan", use_dimred = "umap", min_samples = 21L, min_cluster_size = 23L, column = ".clustering_2123") %>%
+  singlecellutils::add_clustering(flavor = "hdbscan", use_dimred = "umap", min_samples = 23L, min_cluster_size = 25L, column = ".clustering_2325")
+```
+
+### Visualization of dimension reduction and clustering {#vis}
+
+Visualization of different clusterings (e.g. different parameters) can be performed with functions from the `r BiocStyle::Biocpkg("scater")` package:
+
+```{r hdbscan-visualization, fig.cap="UMAP dimension reduction on the `neuron_1k_v3` dataset, coloured by different HDBSCAN clusterings.", fig.width=8, fig.height=6}
+
+hdbscan_p1 <- scater::plotReducedDim(neuron_1k_v3, use_dimred = "umap", colour_by = ".clustering_911", add_ticks = FALSE)
+hdbscan_p2 <- scater::plotReducedDim(neuron_1k_v3, use_dimred = "umap", colour_by = ".clustering_1719", add_ticks = FALSE)
+hdbscan_p3 <- scater::plotReducedDim(neuron_1k_v3, use_dimred = "umap", colour_by = ".clustering_2123", add_ticks = FALSE)
+hdbscan_p4 <- scater::plotReducedDim(neuron_1k_v3, use_dimred = "umap", colour_by = ".clustering_2325", add_ticks = FALSE)
+
+gridExtra::grid.arrange(hdbscan_p1, hdbscan_p2, hdbscan_p3, hdbscan_p4, nrow = 2)
+```
+
+## Using pipes to reduce dimension and perform clustering
+
+The code snippets from above for normalization, dimension reduction and clustering can easily be combined into one *pipeline*. This will reduce the amount of code you’ll have to write, enhances visibility of what functions are applied to the neuron_1k_v3 object and normally speeds up your analysis as well. Here we go:
+
+```{r pipe-processing, eval = FALSE}
+neuron_1k_v3 %<>%
+  scran::simpleSumFactors(assay.type = "umi") %>%
+  scater::normalize(exprs_values = "umi") %>%
+  singlecellutils::reduce_dimension(flavor = "umap",
+                                    exprs_values = "logcounts",
+                                    n_neighbors = 20L,
+                                    min_dist = 0.1,
+                                    seed = 2304) %>%
+  singlecellutils::add_clustering(flavor = "hdbscan",
+                                  use_dimred = "umap",
+                                  min_samples = 21L,
+                                  min_cluster_size = 23L)
+```
