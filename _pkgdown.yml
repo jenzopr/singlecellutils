@@ -29,4 +29,6 @@ reference:
 articles:
 - title: All vignettes
   desc: ~
-  contents: '`singlecellutils-filtering`'
+  contents:
+    - '`singlecellutils-filtering`'
+    - '`singlecellutils-dimensionreduction`'

@@ -2,5 +2,6 @@ pandoc: '2.5'
 pkgdown: 1.3.0
 pkgdown_sha: ~
 articles:
+  singlecellutils-dimensionreduction: singlecellutils-dimensionreduction.html
   singlecellutils-filtering: singlecellutils-filtering.html
 
