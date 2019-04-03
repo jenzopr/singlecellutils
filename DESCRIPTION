@@ -26,6 +26,7 @@ Imports:
     irlba,
     WGCNA,
     MASS,
+    assertive.sets
 Suggests:
     reticulate,
     rsvd,
@@ -33,7 +34,8 @@ Suggests:
     knitr,
     rmarkdown,
     BiocStyle,
-    genefilter
+    genefilter,
+    ComplexHeatmap
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr
 URL: https://github.com/jenzopr/singlecellutils
