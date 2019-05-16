@@ -24,7 +24,6 @@ Imports:
     scater,
     Rtsne,
     irlba,
-    WGCNA,
     MASS,
     assertive.sets
 Suggests:
