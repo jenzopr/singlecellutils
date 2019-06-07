@@ -97,7 +97,8 @@ plotComplexHeatmap <- function(object, features, exprs_values = "normcounts", us
     }
 
     object %>%
-      SummarizedExperiment::assay(i = exprs_values) -> data
+      SummarizedExperiment::assay(i = exprs_values) %>%
+      as.matrix() -> data
 
     # Add symbols instead of gene IDs
     if(!is.null(rownames) && rownames %in% colnames(SummarizedExperiment::rowData(object))) {
